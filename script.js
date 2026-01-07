@@ -37,8 +37,10 @@ window.addEventListener('DOMContentLoaded', function() {
     const categoryProgressPercent = document.getElementById('categoryProgressPercent');
     const categoryProgressLabel = document.getElementById('categoryProgressLabel');
     
-    // Local storage key
+    // Local storage keys
     const STORAGE_KEY = 'travelTracker_visited';
+    const CUSTOM_LOCATIONS_KEY = 'travelTracker_customLocations';
+    const MUST_SEES_KEY = 'travelTracker_mustSees';
     
     // Current item being displayed in sidebar
     let currentItem = null;
@@ -223,6 +225,96 @@ window.addEventListener('DOMContentLoaded', function() {
         return true; // 'all'
     }
 
+    // Must-Sees functionality - define before openSidebar uses it
+    function getMustSeesForLocation(uniqueId) {
+        try {
+            const allMustSees = JSON.parse(localStorage.getItem(MUST_SEES_KEY) || '{}');
+            return allMustSees[uniqueId] || [];
+        } catch (error) {
+            console.error('Error loading must-sees:', error);
+            return [];
+        }
+    }
+    
+    function saveMustSeesForLocation(uniqueId, mustSees) {
+        try {
+            const allMustSees = JSON.parse(localStorage.getItem(MUST_SEES_KEY) || '{}');
+            allMustSees[uniqueId] = mustSees;
+            localStorage.setItem(MUST_SEES_KEY, JSON.stringify(allMustSees));
+        } catch (error) {
+            console.error('Error saving must-sees:', error);
+        }
+    }
+    
+    function loadMustSees(uniqueId) {
+        const mustSeesContainer = document.getElementById('mustSeesContainer');
+        const newMustSeeInput = document.getElementById('newMustSeeInput');
+        const addMustSeeBtn = document.getElementById('addMustSeeBtn');
+        
+        if (!mustSeesContainer || !newMustSeeInput || !addMustSeeBtn) return;
+        
+        const mustSees = getMustSeesForLocation(uniqueId);
+        mustSeesContainer.innerHTML = '';
+        
+        mustSees.forEach((item, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'flex items-center gap-2 p-2 bg-gray-50 rounded-lg';
+            itemDiv.innerHTML = `
+                <input type="checkbox" ${item.checked ? 'checked' : ''} 
+                       class="must-see-checkbox w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                       data-index="${index}">
+                <span class="flex-1 text-sm ${item.checked ? 'line-through text-gray-500' : 'text-gray-700'}">${item.text}</span>
+                <button class="delete-must-see text-red-500 hover:text-red-700 text-sm" data-index="${index}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            `;
+            
+            // Checkbox handler
+            const checkbox = itemDiv.querySelector('.must-see-checkbox');
+            checkbox.addEventListener('change', (e) => {
+                const idx = parseInt(e.target.dataset.index);
+                const mustSees = getMustSeesForLocation(uniqueId);
+                mustSees[idx].checked = e.target.checked;
+                saveMustSeesForLocation(uniqueId, mustSees);
+                loadMustSees(uniqueId); // Reload to update styling
+            });
+            
+            // Delete handler
+            const deleteBtn = itemDiv.querySelector('.delete-must-see');
+            deleteBtn.addEventListener('click', () => {
+                const idx = parseInt(deleteBtn.dataset.index);
+                const mustSees = getMustSeesForLocation(uniqueId);
+                mustSees.splice(idx, 1);
+                saveMustSeesForLocation(uniqueId, mustSees);
+                loadMustSees(uniqueId);
+            });
+            
+            mustSeesContainer.appendChild(itemDiv);
+        });
+        
+        // Add new must-see handler
+        const handleAddMustSee = () => {
+            const text = newMustSeeInput.value.trim();
+            if (!text) return;
+            
+            const mustSees = getMustSeesForLocation(uniqueId);
+            mustSees.push({ text: text, checked: false });
+            saveMustSeesForLocation(uniqueId, mustSees);
+            newMustSeeInput.value = '';
+            loadMustSees(uniqueId);
+        };
+        
+        addMustSeeBtn.onclick = handleAddMustSee;
+        newMustSeeInput.onkeypress = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleAddMustSee();
+            }
+        };
+    }
+
     // Function to open sidebar with location/park data
     function openSidebar(data) {
         console.log('Opening sidebar for:', data.name);
@@ -272,6 +364,9 @@ window.addEventListener('DOMContentLoaded', function() {
         }
         
         sidebar.classList.add('open');
+        
+        // Load must-sees for this location
+        loadMustSees(uniqueId);
     }
     
     // Handle checkbox change
@@ -459,34 +554,107 @@ window.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Function to populate location list
-    function populateLocationList() {
-        const locationListEl = document.getElementById('locationList');
-        if (!locationListEl) return;
+    // Function to populate location list with accordion grouping
+    function populateLocationList(searchTerm = '') {
+        const locationListContainer = document.getElementById('locationListContainer');
+        if (!locationListContainer) return;
         
         // Clear existing list
-        locationListEl.innerHTML = '';
+        locationListContainer.innerHTML = '';
         
-        // Sort all markers alphabetically by name
-        const sortedMarkers = [...allMarkers].sort((a, b) => {
-            return a.data.name.localeCompare(b.data.name);
+        // Group markers by category
+        const groupedByCategory = {};
+        allMarkers.forEach(markerData => {
+            const data = markerData.data;
+            const category = data.category || 'National Park';
+            
+            // Filter by search term
+            if (searchTerm && !data.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+                return;
+            }
+            
+            if (!groupedByCategory[category]) {
+                groupedByCategory[category] = [];
+            }
+            groupedByCategory[category].push(markerData);
         });
         
-        // Create list items
-        sortedMarkers.forEach(markerData => {
-            const data = markerData.data;
-            const listItem = document.createElement('div');
-            listItem.className = 'p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors';
-            listItem.innerHTML = `
-                <div class="font-semibold text-gray-800">${data.name}</div>
-                <div class="text-sm text-gray-500">${data.category || 'National Park'}</div>
-            `;
-            
-            listItem.addEventListener('click', () => {
-                flyToLocation(data);
+        // Sort categories alphabetically
+        const sortedCategories = Object.keys(groupedByCategory).sort();
+        
+        // Create accordion for each category
+        sortedCategories.forEach(category => {
+            const markers = groupedByCategory[category].sort((a, b) => {
+                return a.data.name.localeCompare(b.data.name);
             });
             
-            locationListEl.appendChild(listItem);
+            // Create accordion item
+            const accordionItem = document.createElement('div');
+            accordionItem.className = 'mb-2 border border-gray-200 rounded-lg overflow-hidden';
+            
+            const accordionHeader = document.createElement('div');
+            accordionHeader.className = 'accordion-header p-3 bg-gray-50 flex justify-between items-center';
+            accordionHeader.innerHTML = `
+                <div class="font-semibold text-gray-800">
+                    ${category} <span class="text-sm font-normal text-gray-500">(${markers.length})</span>
+                </div>
+                <svg class="w-5 h-5 text-gray-500 transition-transform accordion-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            `;
+            
+            const accordionContent = document.createElement('div');
+            accordionContent.className = 'accordion-content';
+            
+            // Create location items within accordion
+            markers.forEach(markerData => {
+                const data = markerData.data;
+                const listItem = document.createElement('div');
+                listItem.className = 'p-3 border-t border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors';
+                listItem.innerHTML = `
+                    <div class="font-semibold text-gray-800">${data.name}</div>
+                    ${data.notes ? `<div class="text-xs text-gray-500 mt-1 line-clamp-1">${data.notes}</div>` : ''}
+                `;
+                
+                listItem.addEventListener('click', () => {
+                    flyToLocation(data);
+                });
+                
+                accordionContent.appendChild(listItem);
+            });
+            
+            // Toggle accordion on header click
+            accordionHeader.addEventListener('click', () => {
+                const isOpen = accordionContent.classList.contains('open');
+                const arrow = accordionHeader.querySelector('.accordion-arrow');
+                
+                if (isOpen) {
+                    accordionContent.classList.remove('open');
+                    arrow.style.transform = 'rotate(0deg)';
+                } else {
+                    accordionContent.classList.add('open');
+                    arrow.style.transform = 'rotate(180deg)';
+                }
+            });
+            
+            accordionItem.appendChild(accordionHeader);
+            accordionItem.appendChild(accordionContent);
+            locationListContainer.appendChild(accordionItem);
+            
+            // Auto-expand first category
+            if (sortedCategories.indexOf(category) === 0) {
+                accordionContent.classList.add('open');
+                accordionHeader.querySelector('.accordion-arrow').style.transform = 'rotate(180deg)';
+            }
+        });
+    }
+    
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.trim();
+            populateLocationList(searchTerm);
         });
     }
 
@@ -613,6 +781,142 @@ window.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // Load parks
+    // Load custom locations from localStorage
+    function loadCustomLocations() {
+        try {
+            const customLocations = JSON.parse(localStorage.getItem(CUSTOM_LOCATIONS_KEY) || '[]');
+            customLocations.forEach(location => {
+                const uniqueId = generateUniqueId(location);
+                const locationIsVisited = getVisitedStatus(uniqueId, location.status === 'visited');
+                
+                const locationIcon = createCustomIcon(location.category, locationIsVisited);
+                const locationMarker = L.marker([location.lat, location.lng], { icon: locationIcon });
+                
+                locationMarker.on('click', function(e) {
+                    e.originalEvent.stopPropagation();
+                    openSidebar(location);
+                });
+                
+                allMarkers.push({
+                    marker: locationMarker,
+                    isVisited: locationIsVisited,
+                    data: location,
+                    uniqueId: uniqueId
+                });
+                
+                markerClusterGroup.addLayer(locationMarker);
+            });
+            
+            if (customLocations.length > 0) {
+                populateLocationList();
+                updateProgressBars();
+            }
+        } catch (error) {
+            console.error('Error loading custom locations:', error);
+        }
+    }
+    
+    // Save custom location to localStorage
+    function saveCustomLocation(location) {
+        try {
+            const customLocations = JSON.parse(localStorage.getItem(CUSTOM_LOCATIONS_KEY) || '[]');
+            customLocations.push(location);
+            localStorage.setItem(CUSTOM_LOCATIONS_KEY, JSON.stringify(customLocations));
+            
+            // Add to map
+            const uniqueId = generateUniqueId(location);
+            const locationIsVisited = false;
+            const locationIcon = createCustomIcon(location.category, locationIsVisited);
+            const locationMarker = L.marker([location.lat, location.lng], { icon: locationIcon });
+            
+            locationMarker.on('click', function(e) {
+                e.originalEvent.stopPropagation();
+                openSidebar(location);
+            });
+            
+            allMarkers.push({
+                marker: locationMarker,
+                isVisited: locationIsVisited,
+                data: location,
+                uniqueId: uniqueId
+            });
+            
+            markerClusterGroup.addLayer(locationMarker);
+            populateLocationList();
+            updateProgressBars();
+            
+            // Fly to new location
+            map.flyTo([location.lat, location.lng], 10, { duration: 1.5 });
+            setTimeout(() => {
+                openSidebar(location);
+            }, 800);
+        } catch (error) {
+            console.error('Error saving custom location:', error);
+        }
+    }
+    
+    // Add location modal functionality
+    const addLocationBtn = document.getElementById('addLocationBtn');
+    const addLocationModal = document.getElementById('addLocationModal');
+    const closeAddLocationModal = document.getElementById('closeAddLocationModal');
+    const cancelAddLocation = document.getElementById('cancelAddLocation');
+    const addLocationForm = document.getElementById('addLocationForm');
+    
+    function openAddLocationModal() {
+        if (addLocationModal) {
+            addLocationModal.classList.remove('hidden');
+        }
+    }
+    
+    function closeAddLocationModalFunc() {
+        if (addLocationModal) {
+            addLocationModal.classList.add('hidden');
+            addLocationForm.reset();
+        }
+    }
+    
+    if (addLocationBtn) {
+        addLocationBtn.addEventListener('click', openAddLocationModal);
+    }
+    
+    if (closeAddLocationModal) {
+        closeAddLocationModal.addEventListener('click', closeAddLocationModalFunc);
+    }
+    
+    if (cancelAddLocation) {
+        cancelAddLocation.addEventListener('click', closeAddLocationModalFunc);
+    }
+    
+    if (addLocationForm) {
+        addLocationForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const newLocation = {
+                name: document.getElementById('newLocationName').value.trim(),
+                lat: parseFloat(document.getElementById('newLocationLat').value),
+                lng: parseFloat(document.getElementById('newLocationLng').value),
+                category: document.getElementById('newLocationCategory').value,
+                notes: document.getElementById('newLocationNotes').value.trim() || '',
+                image_url: document.getElementById('newLocationImageUrl').value.trim() || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4',
+                status: 'bucket_list'
+            };
+            
+            if (!newLocation.name || !newLocation.category || isNaN(newLocation.lat) || isNaN(newLocation.lng)) {
+                alert('Please fill in all required fields (Name, Latitude, Longitude, Category)');
+                return;
+            }
+            
+            saveCustomLocation(newLocation);
+            closeAddLocationModalFunc();
+        });
+    }
+    
+    
+    // Load parks first, then custom locations
     loadParks();
+    
+    // Load custom locations after a short delay to ensure parks are loaded
+    setTimeout(() => {
+        loadCustomLocations();
+    }, 100);
 });

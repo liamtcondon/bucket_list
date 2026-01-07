@@ -36,13 +36,35 @@
         #leftPanel {
             width: 320px;
         }
+        #addLocationModal {
+            display: flex;
+        }
+        #addLocationModal.hidden {
+            display: none;
+        }
+        .accordion-header {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .accordion-header:hover {
+            background-color: #f3f4f6;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .accordion-content.open {
+            max-height: 1000px;
+            transition: max-height 0.5s ease-in;
+        }
     </style>
 </head>
 <body>
-    <!-- Left Panel -->
+    <!-- Left Panel - Control Center -->
     <div id="leftPanel" class="fixed top-0 left-0 h-full bg-white shadow-2xl z-[1000] overflow-y-auto">
         <div class="p-6">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Travel Tracker</h2>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Control Center</h2>
             
             <!-- Progress Bars -->
             <div class="mb-6">
@@ -79,13 +101,87 @@
                 </button>
             </div>
             
-            <!-- Location List -->
-            <div>
-                <h3 class="text-lg font-semibold text-gray-700 mb-3">Locations</h3>
-                <div id="locationList" class="space-y-2">
-                    <!-- Locations will be populated here -->
-                </div>
+            <!-- Add Location Button -->
+            <div class="mb-6">
+                <button id="addLocationBtn" class="w-full px-4 py-3 bg-indigo-500 text-white rounded-lg shadow-md hover:bg-indigo-600 transition-colors font-semibold flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Add Location
+                </button>
             </div>
+            
+            <!-- Search Bar -->
+            <div class="mb-4">
+                <input type="text" id="searchInput" placeholder="Search locations..." 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+            </div>
+            
+            <!-- Grouped Location List (Accordion) -->
+            <div id="locationListContainer">
+                <!-- Accordion items will be populated here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Location Modal -->
+    <div id="addLocationModal" class="fixed inset-0 bg-black bg-opacity-50 z-[2000] hidden items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold text-gray-800">Add New Location</h3>
+                <button id="closeAddLocationModal" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="addLocationForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Name *</label>
+                    <input type="text" id="newLocationName" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Latitude *</label>
+                        <input type="number" id="newLocationLat" step="any" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Longitude *</label>
+                        <input type="number" id="newLocationLng" step="any" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Category *</label>
+                    <select id="newLocationCategory" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Select category...</option>
+                        <option value="National Park">National Park</option>
+                        <option value="Golf">Golf</option>
+                        <option value="Beach">Beach</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Notes</label>
+                    <textarea id="newLocationNotes" rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Image URL</label>
+                    <input type="url" id="newLocationImageUrl"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" class="flex-1 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors font-semibold">
+                        Add Location
+                    </button>
+                    <button type="button" id="cancelAddLocation" class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors font-semibold">
+                        Cancel
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
     
@@ -122,6 +218,21 @@
             <div class="mb-4">
                 <h3 class="text-lg font-semibold text-gray-700 mb-2">Notes</h3>
                 <p id="locationNotes" class="text-gray-600 leading-relaxed"></p>
+            </div>
+            
+            <!-- Must-Sees Section -->
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold text-gray-700 mb-3">Must-Sees</h3>
+                <div id="mustSeesContainer" class="space-y-2">
+                    <!-- Must-see items will be populated here -->
+                </div>
+                <div class="mt-3 flex gap-2">
+                    <input type="text" id="newMustSeeInput" placeholder="Add a must-see..."
+                           class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    <button id="addMustSeeBtn" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors font-semibold text-sm">
+                        Add
+                    </button>
+                </div>
             </div>
         </div>
     </div>
