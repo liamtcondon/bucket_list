@@ -81,23 +81,60 @@ window.addEventListener('DOMContentLoaded', function() {
     // Function to create custom icons based on category
     function createCustomIcon(category, isVisited) {
         const categoryLower = (category || '').toLowerCase();
-        let iconPath;
+        let iconSvg;
         let color;
         const strokeColor = isVisited ? '#ffffff' : '#000000';
+        const iconColor = isVisited ? '#ffffff' : '#000000';
         
         // Determine icon and color based on category
         if (categoryLower.includes('golf')) {
             // Flag icon for Golf - green pin
             color = isVisited ? '#10b981' : '#059669'; // Green shades
-            iconPath = 'M4 6h14v12h-3l-3-2.5-3 2.5H4V6zm2 2v8h1.5l3.5-3 3.5 3H14V8H6z M6 8h8v2H6z';
+            // Flag icon: pole with triangular flag
+            iconSvg = `
+                <g transform="translate(8, 8)">
+                    <!-- Flag pole -->
+                    <line x1="12" y1="0" x2="12" y2="16" stroke="${iconColor}" stroke-width="2" stroke-linecap="round"/>
+                    <!-- Flag -->
+                    <path d="M12 2 L20 6 L12 10 Z" fill="${iconColor}" stroke="${iconColor}" stroke-width="0.5"/>
+                    <!-- Pole top -->
+                    <circle cx="12" cy="0" r="2" fill="${iconColor}"/>
+                </g>
+            `;
         } else if (categoryLower.includes('beach')) {
-            // Umbrella icon for Beach - blue pin
+            // Beach umbrella with sand for Beach - blue pin
             color = isVisited ? '#3b82f6' : '#2563eb'; // Blue shades
-            iconPath = 'M12 3C8 3 5 5.5 5 9v1h14V9c0-3.5-3-6-7-6zm0 2c2.5 0 4.5 1.5 5 3.5H7c.5-2 2.5-3.5 5-3.5zm-7 7v9h2v-5h10v5h2V12H5z';
+            // Beach umbrella icon: umbrella with sand mound
+            iconSvg = `
+                <g transform="translate(8, 6)">
+                    <!-- Sand mound -->
+                    <path d="M4 18 Q8 16 12 18 T20 18 L20 20 L4 20 Z" fill="${iconColor}" opacity="0.7"/>
+                    <!-- Umbrella pole -->
+                    <line x1="12" y1="18" x2="12" y2="6" stroke="${iconColor}" stroke-width="2" stroke-linecap="round"/>
+                    <!-- Umbrella canopy (striped) -->
+                    <path d="M12 6 Q6 8 4 12 Q4 10 12 8 Q20 10 20 12 Q18 8 12 6" 
+                          fill="${iconColor}" opacity="0.9"/>
+                    <path d="M12 6 Q8 7 6 10 Q6 9 12 7 Q18 9 18 10 Q16 7 12 6" 
+                          fill="${iconColor}" opacity="0.6"/>
+                    <!-- Umbrella top -->
+                    <circle cx="12" cy="6" r="1.5" fill="${iconColor}"/>
+                </g>
+            `;
         } else {
-            // Mountain icon for National Parks (default) - brown pin
+            // Tree icon for National Parks (default) - brown pin
             color = isVisited ? '#92400e' : '#78350f'; // Brown shades
-            iconPath = 'M12 18L5 9l3.5 6.5L12 11l3.5 4.5L19 9l-7 9zm0-14L4 9h16l-8-5z';
+            // Tree icon: tree with trunk and leaves
+            iconSvg = `
+                <g transform="translate(8, 6)">
+                    <!-- Tree trunk -->
+                    <rect x="11" y="12" width="2" height="6" fill="${iconColor}"/>
+                    <!-- Tree leaves (multiple levels) -->
+                    <circle cx="12" cy="10" r="4" fill="${iconColor}" opacity="0.8"/>
+                    <circle cx="10" cy="8" r="3" fill="${iconColor}" opacity="0.9"/>
+                    <circle cx="14" cy="8" r="3" fill="${iconColor}" opacity="0.9"/>
+                    <circle cx="12" cy="6" r="2.5" fill="${iconColor}"/>
+                </g>
+            `;
         }
         
         // Create pin shape with icon
@@ -122,10 +159,7 @@ window.addEventListener('DOMContentLoaded', function() {
                       stroke-width="${isVisited ? '2.5' : '1.5'}"
                       opacity="${isVisited ? '1' : '0.95'}"
                       filter="url(#shadow)"/>
-                <path d="${iconPath}" 
-                      fill="${strokeColor}" 
-                      transform="translate(8, 6) scale(1.2)"
-                      opacity="${isVisited ? '1' : '0.9'}"/>
+                ${iconSvg}
             </svg>
         `;
         
