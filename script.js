@@ -575,6 +575,9 @@ window.addEventListener('DOMContentLoaded', function() {
             
             // Update marker appearance immediately
             updateMarkerAppearance(currentMarkerData, isVisited);
+            
+            // Update progress bars
+            updateProgressBars();
         });
     }
 
