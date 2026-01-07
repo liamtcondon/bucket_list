@@ -90,49 +90,56 @@ window.addEventListener('DOMContentLoaded', function() {
         if (categoryLower.includes('golf')) {
             // Flag icon for Golf - green pin
             color = isVisited ? '#10b981' : '#059669'; // Green shades
-            // Flag icon: pole with triangular flag
+            // Flag icon: pole with triangular flag and golf hole
             iconSvg = `
-                <g transform="translate(8, 8)">
-                    <!-- Flag pole -->
-                    <line x1="12" y1="0" x2="12" y2="16" stroke="${iconColor}" stroke-width="2" stroke-linecap="round"/>
-                    <!-- Flag -->
-                    <path d="M12 2 L20 6 L12 10 Z" fill="${iconColor}" stroke="${iconColor}" stroke-width="0.5"/>
-                    <!-- Pole top -->
-                    <circle cx="12" cy="0" r="2" fill="${iconColor}"/>
+                <g transform="translate(6, 4)">
+                    <!-- Golf hole (circle at bottom) -->
+                    <circle cx="14" cy="18" r="2.5" fill="${iconColor}" opacity="0.9"/>
+                    <circle cx="14" cy="18" r="1.5" fill="${iconColor}" opacity="0.5"/>
+                    <!-- Flag pole (vertical line) -->
+                    <line x1="14" y1="18" x2="14" y2="2" stroke="${iconColor}" stroke-width="2.5" stroke-linecap="round"/>
+                    <!-- Flag (triangle) -->
+                    <path d="M14 4 L22 8 L14 12 Z" fill="${iconColor}"/>
+                    <!-- Pole top ball -->
+                    <circle cx="14" cy="2" r="2.5" fill="${iconColor}"/>
                 </g>
             `;
         } else if (categoryLower.includes('beach')) {
             // Beach umbrella with sand for Beach - blue pin
             color = isVisited ? '#3b82f6' : '#2563eb'; // Blue shades
-            // Beach umbrella icon: umbrella with sand mound
+            // Beach umbrella icon: umbrella canopy with sand mound
             iconSvg = `
-                <g transform="translate(8, 6)">
-                    <!-- Sand mound -->
-                    <path d="M4 18 Q8 16 12 18 T20 18 L20 20 L4 20 Z" fill="${iconColor}" opacity="0.7"/>
+                <g transform="translate(4, 4)">
+                    <!-- Sand mound base -->
+                    <ellipse cx="14" cy="18" rx="9" ry="2.5" fill="${iconColor}" opacity="0.8"/>
                     <!-- Umbrella pole -->
-                    <line x1="12" y1="18" x2="12" y2="6" stroke="${iconColor}" stroke-width="2" stroke-linecap="round"/>
-                    <!-- Umbrella canopy (striped) -->
-                    <path d="M12 6 Q6 8 4 12 Q4 10 12 8 Q20 10 20 12 Q18 8 12 6" 
-                          fill="${iconColor}" opacity="0.9"/>
-                    <path d="M12 6 Q8 7 6 10 Q6 9 12 7 Q18 9 18 10 Q16 7 12 6" 
-                          fill="${iconColor}" opacity="0.6"/>
-                    <!-- Umbrella top -->
-                    <circle cx="12" cy="6" r="1.5" fill="${iconColor}"/>
+                    <line x1="14" y1="18" x2="14" y2="8" stroke="${iconColor}" stroke-width="2.5" stroke-linecap="round"/>
+                    <!-- Umbrella canopy (half circle / dome shape) -->
+                    <path d="M5 8 Q14 2 23 8" stroke="${iconColor}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    <path d="M5 8 Q14 3 23 8 L14 8 Z" fill="${iconColor}" opacity="0.9"/>
+                    <!-- Umbrella stripes -->
+                    <line x1="8" y1="6" x2="20" y2="6" stroke="${iconColor}" stroke-width="1" opacity="0.7"/>
+                    <line x1="7" y1="7" x2="21" y2="7" stroke="${iconColor}" stroke-width="1" opacity="0.7"/>
+                    <!-- Umbrella top tip -->
+                    <circle cx="14" cy="2" r="1.5" fill="${iconColor}"/>
                 </g>
             `;
         } else {
-            // Tree icon for National Parks (default) - brown pin
+            // Evergreen tree icon for National Parks (default) - brown pin
             color = isVisited ? '#92400e' : '#78350f'; // Brown shades
-            // Tree icon: tree with trunk and leaves
+            // Evergreen tree icon: triangular layers with trunk
             iconSvg = `
-                <g transform="translate(8, 6)">
+                <g transform="translate(4, 3)">
                     <!-- Tree trunk -->
-                    <rect x="11" y="12" width="2" height="6" fill="${iconColor}"/>
-                    <!-- Tree leaves (multiple levels) -->
-                    <circle cx="12" cy="10" r="4" fill="${iconColor}" opacity="0.8"/>
-                    <circle cx="10" cy="8" r="3" fill="${iconColor}" opacity="0.9"/>
-                    <circle cx="14" cy="8" r="3" fill="${iconColor}" opacity="0.9"/>
-                    <circle cx="12" cy="6" r="2.5" fill="${iconColor}"/>
+                    <rect x="12.5" y="15" width="3" height="5" fill="${iconColor}"/>
+                    <!-- Bottom layer of branches (largest triangle) -->
+                    <path d="M14 15 L6 12 L22 12 Z" fill="${iconColor}" opacity="0.95"/>
+                    <!-- Middle layer of branches -->
+                    <path d="M14 11 L8 9 L20 9 Z" fill="${iconColor}" opacity="0.9"/>
+                    <!-- Top layer of branches (smallest triangle) -->
+                    <path d="M14 7 L10 6 L18 6 Z" fill="${iconColor}"/>
+                    <!-- Tree top point -->
+                    <circle cx="14" cy="5" r="1" fill="${iconColor}"/>
                 </g>
             `;
         }
