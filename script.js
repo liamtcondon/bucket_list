@@ -260,6 +260,18 @@ window.addEventListener('DOMContentLoaded', function() {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'flex items-center gap-2 p-2 bg-gray-50 rounded-lg';
             itemDiv.innerHTML = `
+                <div class="flex flex-col gap-1">
+                    <button class="move-up text-gray-400 hover:text-gray-600 text-xs" data-index="${index}" ${index === 0 ? 'disabled' : ''}>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                        </svg>
+                    </button>
+                    <button class="move-down text-gray-400 hover:text-gray-600 text-xs" data-index="${index}" ${index === mustSees.length - 1 ? 'disabled' : ''}>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                </div>
                 <input type="checkbox" ${item.checked ? 'checked' : ''} 
                        class="must-see-checkbox w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
                        data-index="${index}">
@@ -281,6 +293,34 @@ window.addEventListener('DOMContentLoaded', function() {
                 loadMustSees(uniqueId); // Reload to update styling
             });
             
+            // Move up handler
+            const moveUpBtn = itemDiv.querySelector('.move-up');
+            if (!moveUpBtn.disabled) {
+                moveUpBtn.addEventListener('click', () => {
+                    const idx = parseInt(moveUpBtn.dataset.index);
+                    if (idx > 0) {
+                        const mustSees = getMustSeesForLocation(uniqueId);
+                        [mustSees[idx], mustSees[idx - 1]] = [mustSees[idx - 1], mustSees[idx]];
+                        saveMustSeesForLocation(uniqueId, mustSees);
+                        loadMustSees(uniqueId);
+                    }
+                });
+            }
+            
+            // Move down handler
+            const moveDownBtn = itemDiv.querySelector('.move-down');
+            if (!moveDownBtn.disabled) {
+                moveDownBtn.addEventListener('click', () => {
+                    const idx = parseInt(moveDownBtn.dataset.index);
+                    const mustSees = getMustSeesForLocation(uniqueId);
+                    if (idx < mustSees.length - 1) {
+                        [mustSees[idx], mustSees[idx + 1]] = [mustSees[idx + 1], mustSees[idx]];
+                        saveMustSeesForLocation(uniqueId, mustSees);
+                        loadMustSees(uniqueId);
+                    }
+                });
+            }
+            
             // Delete handler
             const deleteBtn = itemDiv.querySelector('.delete-must-see');
             deleteBtn.addEventListener('click', () => {
@@ -300,7 +340,7 @@ window.addEventListener('DOMContentLoaded', function() {
             if (!text) return;
             
             const mustSees = getMustSeesForLocation(uniqueId);
-            mustSees.push({ text: text, checked: false });
+            mustSees.unshift({ text: text, checked: false }); // Add to beginning
             saveMustSeesForLocation(uniqueId, mustSees);
             newMustSeeInput.value = '';
             loadMustSees(uniqueId);
@@ -855,15 +895,37 @@ window.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Add location modal functionality
+    // Add/Edit location modal functionality
     const addLocationBtn = document.getElementById('addLocationBtn');
+    const editLocationBtn = document.getElementById('editLocationBtn');
     const addLocationModal = document.getElementById('addLocationModal');
     const closeAddLocationModal = document.getElementById('closeAddLocationModal');
     const cancelAddLocation = document.getElementById('cancelAddLocation');
     const addLocationForm = document.getElementById('addLocationForm');
+    const modalTitle = document.getElementById('modalTitle');
+    let isEditingLocation = false;
+    let editingLocationData = null;
     
-    function openAddLocationModal() {
+    function openAddLocationModal(editData = null) {
         if (addLocationModal) {
+            isEditingLocation = editData !== null;
+            editingLocationData = editData;
+            
+            if (isEditingLocation) {
+                modalTitle.textContent = 'Edit Location';
+                // Populate form with existing data
+                document.getElementById('newLocationName').value = editData.name || '';
+                document.getElementById('newLocationLat').value = editData.lat || '';
+                document.getElementById('newLocationLng').value = editData.lng || '';
+                document.getElementById('newLocationCategorySelect').value = '';
+                document.getElementById('newLocationCategory').value = editData.category || '';
+                document.getElementById('newLocationNotes').value = editData.notes || '';
+                document.getElementById('newLocationImageUrl').value = editData.image_url || '';
+            } else {
+                modalTitle.textContent = 'Add New Location';
+                addLocationForm.reset();
+            }
+            
             addLocationModal.classList.remove('hidden');
         }
     }
@@ -872,11 +934,48 @@ window.addEventListener('DOMContentLoaded', function() {
         if (addLocationModal) {
             addLocationModal.classList.add('hidden');
             addLocationForm.reset();
+            isEditingLocation = false;
+            editingLocationData = null;
         }
     }
     
+    if (editLocationBtn) {
+        editLocationBtn.addEventListener('click', () => {
+            if (currentItem) {
+                // Check if it's a custom location (has a way to identify it)
+                const uniqueId = generateUniqueId(currentItem);
+                const customLocations = JSON.parse(localStorage.getItem(CUSTOM_LOCATIONS_KEY) || '[]');
+                const customLocation = customLocations.find(loc => generateUniqueId(loc) === uniqueId);
+                
+                if (customLocation) {
+                    openAddLocationModal(customLocation);
+                } else {
+                    alert('Only custom locations can be edited. This location is from the JSON files.');
+                }
+            }
+        });
+    }
+    
+    // Sync category select and input
+    const categorySelect = document.getElementById('newLocationCategorySelect');
+    const categoryInput = document.getElementById('newLocationCategory');
+    
+    if (categorySelect && categoryInput) {
+        categorySelect.addEventListener('change', (e) => {
+            if (e.target.value) {
+                categoryInput.value = e.target.value;
+            }
+        });
+        
+        categoryInput.addEventListener('input', (e) => {
+            if (e.target.value && categorySelect.value) {
+                categorySelect.value = '';
+            }
+        });
+    }
+    
     if (addLocationBtn) {
-        addLocationBtn.addEventListener('click', openAddLocationModal);
+        addLocationBtn.addEventListener('click', () => openAddLocationModal(null));
     }
     
     if (closeAddLocationModal) {
@@ -887,26 +986,113 @@ window.addEventListener('DOMContentLoaded', function() {
         cancelAddLocation.addEventListener('click', closeAddLocationModalFunc);
     }
     
+    // Validate coordinates
+    function validateCoordinates(lat, lng) {
+        if (isNaN(lat) || isNaN(lng)) {
+            return { valid: false, error: 'Latitude and Longitude must be valid numbers' };
+        }
+        if (lat < -90 || lat > 90) {
+            return { valid: false, error: 'Latitude must be between -90 and 90' };
+        }
+        if (lng < -180 || lng > 180) {
+            return { valid: false, error: 'Longitude must be between -180 and 180' };
+        }
+        return { valid: true };
+    }
+    
+    // Update custom location in localStorage
+    function updateCustomLocation(oldUniqueId, updatedLocation) {
+        try {
+            const customLocations = JSON.parse(localStorage.getItem(CUSTOM_LOCATIONS_KEY) || '[]');
+            const index = customLocations.findIndex(loc => generateUniqueId(loc) === oldUniqueId);
+            
+            if (index !== -1) {
+                // Update the location
+                customLocations[index] = updatedLocation;
+                localStorage.setItem(CUSTOM_LOCATIONS_KEY, JSON.stringify(customLocations));
+                
+                // Remove old marker
+                const markerData = allMarkers.find(m => generateUniqueId(m.data) === oldUniqueId);
+                if (markerData) {
+                    markerClusterGroup.removeLayer(markerData.marker);
+                    const markerIndex = allMarkers.indexOf(markerData);
+                    if (markerIndex !== -1) {
+                        allMarkers.splice(markerIndex, 1);
+                    }
+                }
+                
+                // Add updated location
+                const uniqueId = generateUniqueId(updatedLocation);
+                const locationIsVisited = getVisitedStatus(uniqueId, updatedLocation.status === 'visited');
+                const locationIcon = createCustomIcon(updatedLocation.category, locationIsVisited);
+                const locationMarker = L.marker([updatedLocation.lat, updatedLocation.lng], { icon: locationIcon });
+                
+                locationMarker.on('click', function(e) {
+                    e.originalEvent.stopPropagation();
+                    openSidebar(updatedLocation);
+                });
+                
+                allMarkers.push({
+                    marker: locationMarker,
+                    isVisited: locationIsVisited,
+                    data: updatedLocation,
+                    uniqueId: uniqueId
+                });
+                
+                markerClusterGroup.addLayer(locationMarker);
+                populateLocationList();
+                updateProgressBars();
+                
+                // Fly to updated location
+                map.flyTo([updatedLocation.lat, updatedLocation.lng], 10, { duration: 1.5 });
+                setTimeout(() => {
+                    openSidebar(updatedLocation);
+                }, 800);
+            }
+        } catch (error) {
+            console.error('Error updating custom location:', error);
+        }
+    }
+    
     if (addLocationForm) {
         addLocationForm.addEventListener('submit', (e) => {
             e.preventDefault();
             
-            const newLocation = {
-                name: document.getElementById('newLocationName').value.trim(),
-                lat: parseFloat(document.getElementById('newLocationLat').value),
-                lng: parseFloat(document.getElementById('newLocationLng').value),
-                category: document.getElementById('newLocationCategory').value,
-                notes: document.getElementById('newLocationNotes').value.trim() || '',
-                image_url: document.getElementById('newLocationImageUrl').value.trim() || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4',
-                status: 'bucket_list'
-            };
+            const lat = parseFloat(document.getElementById('newLocationLat').value);
+            const lng = parseFloat(document.getElementById('newLocationLng').value);
             
-            if (!newLocation.name || !newLocation.category || isNaN(newLocation.lat) || isNaN(newLocation.lng)) {
-                alert('Please fill in all required fields (Name, Latitude, Longitude, Category)');
+            const validation = validateCoordinates(lat, lng);
+            if (!validation.valid) {
+                alert(validation.error);
                 return;
             }
             
-            saveCustomLocation(newLocation);
+            const categorySelect = document.getElementById('newLocationCategorySelect').value.trim();
+            const categoryInput = document.getElementById('newLocationCategory').value.trim();
+            const category = categorySelect || categoryInput;
+            
+            const locationData = {
+                name: document.getElementById('newLocationName').value.trim(),
+                lat: lat,
+                lng: lng,
+                category: category,
+                notes: document.getElementById('newLocationNotes').value.trim() || '',
+                image_url: document.getElementById('newLocationImageUrl').value.trim() || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4',
+                status: editingLocationData?.status || 'bucket_list'
+            };
+            
+            if (!locationData.name || !locationData.category) {
+                alert('Please fill in all required fields (Name, Category)');
+                return;
+            }
+            
+            if (isEditingLocation && editingLocationData) {
+                const oldUniqueId = generateUniqueId(editingLocationData);
+                updateCustomLocation(oldUniqueId, locationData);
+            } else {
+                saveCustomLocation(locationData);
+            }
+            
             closeAddLocationModalFunc();
         });
     }
