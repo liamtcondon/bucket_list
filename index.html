@@ -32,6 +32,19 @@
     </style>
 </head>
 <body>
+    <!-- Filter Buttons -->
+    <div class="fixed top-4 left-4 z-[2000] flex gap-2">
+        <button id="showVisited" class="px-4 py-2 bg-green-500 text-white rounded-lg shadow-lg hover:bg-green-600 transition-colors font-semibold">
+            Show Visited
+        </button>
+        <button id="showBucketList" class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 transition-colors font-semibold">
+            Show Bucket List
+        </button>
+        <button id="showAll" class="px-4 py-2 bg-gray-500 text-white rounded-lg shadow-lg hover:bg-gray-600 transition-colors font-semibold">
+            Show All
+        </button>
+    </div>
+    
     <div id="map"></div>
     
     <!-- Sidebar -->
@@ -53,6 +66,12 @@
             <!-- Category -->
             <div class="mb-4">
                 <span id="locationCategory" class="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold"></span>
+            </div>
+            
+            <!-- Visited Checkbox -->
+            <div class="mb-4 flex items-center gap-2">
+                <input type="checkbox" id="visitedCheckbox" class="w-5 h-5 text-green-600 rounded focus:ring-green-500 focus:ring-2">
+                <label for="visitedCheckbox" class="text-lg font-semibold text-gray-700 cursor-pointer">Mark as Visited</label>
             </div>
             
             <!-- Notes -->
