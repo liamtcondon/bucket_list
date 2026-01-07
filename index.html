@@ -29,23 +29,41 @@
         #sidebar.open {
             transform: translateX(0);
         }
+        #leftPanel {
+            width: 320px;
+        }
     </style>
 </head>
 <body>
-    <!-- Filter Buttons -->
-    <div class="fixed top-4 left-4 z-[2000] flex gap-2">
-        <button id="showVisited" class="px-4 py-2 bg-green-500 text-white rounded-lg shadow-lg hover:bg-green-600 transition-colors font-semibold">
-            Show Visited
-        </button>
-        <button id="showBucketList" class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-lg hover:bg-blue-600 transition-colors font-semibold">
-            Show Bucket List
-        </button>
-        <button id="showAll" class="px-4 py-2 bg-gray-500 text-white rounded-lg shadow-lg hover:bg-gray-600 transition-colors font-semibold">
-            Show All
-        </button>
+    <!-- Left Panel -->
+    <div id="leftPanel" class="fixed top-0 left-0 h-full bg-white shadow-2xl z-[1000] overflow-y-auto">
+        <div class="p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Travel Tracker</h2>
+            
+            <!-- Filter Buttons -->
+            <div class="mb-6 flex flex-col gap-2">
+                <button id="showVisited" class="px-4 py-2 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 transition-colors font-semibold">
+                    Show Visited
+                </button>
+                <button id="showBucketList" class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-colors font-semibold">
+                    Show Bucket List
+                </button>
+                <button id="showAll" class="px-4 py-2 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-600 transition-colors font-semibold">
+                    Show All
+                </button>
+            </div>
+            
+            <!-- Location List -->
+            <div>
+                <h3 class="text-lg font-semibold text-gray-700 mb-3">Locations</h3>
+                <div id="locationList" class="space-y-2">
+                    <!-- Locations will be populated here -->
+                </div>
+            </div>
+        </div>
     </div>
     
-    <div id="map"></div>
+    <div id="map" style="margin-left: 320px;"></div>
     
     <!-- Sidebar -->
     <div id="sidebar" class="fixed top-0 right-0 w-96 h-full bg-white shadow-2xl z-[1000] overflow-y-auto">
