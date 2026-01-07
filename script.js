@@ -416,6 +416,18 @@ window.addEventListener('DOMContentLoaded', function() {
         
         sidebar.classList.add('open');
         
+        // Show/hide edit and delete buttons based on whether it's a custom location
+        const editBtn = document.getElementById('editLocationBtn');
+        const deleteBtn = document.getElementById('deleteLocationBtn');
+        const isCustom = isCustomLocation(data);
+        
+        if (editBtn) {
+            editBtn.style.display = isCustom ? 'block' : 'none';
+        }
+        if (deleteBtn) {
+            deleteBtn.style.display = isCustom ? 'block' : 'none';
+        }
+        
         // Load must-sees for this location
         loadMustSees(uniqueId);
     }
@@ -950,18 +962,75 @@ window.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Check if location is a custom location
+    function isCustomLocation(location) {
+        const uniqueId = generateUniqueId(location);
+        const customLocations = JSON.parse(localStorage.getItem(CUSTOM_LOCATIONS_KEY) || '[]');
+        return customLocations.some(loc => generateUniqueId(loc) === uniqueId);
+    }
+    
+    // Delete custom location
+    function deleteCustomLocation(location) {
+        if (!confirm(`Are you sure you want to delete "${location.name}"? This action cannot be undone.`)) {
+            return;
+        }
+        
+        try {
+            const uniqueId = generateUniqueId(location);
+            const customLocations = JSON.parse(localStorage.getItem(CUSTOM_LOCATIONS_KEY) || '[]');
+            const filteredLocations = customLocations.filter(loc => generateUniqueId(loc) !== uniqueId);
+            localStorage.setItem(CUSTOM_LOCATIONS_KEY, JSON.stringify(filteredLocations));
+            
+            // Remove marker from map
+            const markerData = allMarkers.find(m => generateUniqueId(m.data) === uniqueId);
+            if (markerData) {
+                markerClusterGroup.removeLayer(markerData.marker);
+                const markerIndex = allMarkers.indexOf(markerData);
+                if (markerIndex !== -1) {
+                    allMarkers.splice(markerIndex, 1);
+                }
+            }
+            
+            // Remove must-sees for this location
+            const allMustSees = JSON.parse(localStorage.getItem(MUST_SEES_KEY) || '{}');
+            delete allMustSees[uniqueId];
+            localStorage.setItem(MUST_SEES_KEY, JSON.stringify(allMustSees));
+            
+            // Update UI
+            populateLocationList();
+            updateProgressBars();
+            closeSidebar();
+        } catch (error) {
+            console.error('Error deleting custom location:', error);
+            alert('Error deleting location. Please try again.');
+        }
+    }
+    
     if (editLocationBtn) {
         editLocationBtn.addEventListener('click', () => {
             if (currentItem) {
-                // Check if it's a custom location (has a way to identify it)
-                const uniqueId = generateUniqueId(currentItem);
-                const customLocations = JSON.parse(localStorage.getItem(CUSTOM_LOCATIONS_KEY) || '[]');
-                const customLocation = customLocations.find(loc => generateUniqueId(loc) === uniqueId);
-                
-                if (customLocation) {
-                    openAddLocationModal(customLocation);
+                if (isCustomLocation(currentItem)) {
+                    const uniqueId = generateUniqueId(currentItem);
+                    const customLocations = JSON.parse(localStorage.getItem(CUSTOM_LOCATIONS_KEY) || '[]');
+                    const customLocation = customLocations.find(loc => generateUniqueId(loc) === uniqueId);
+                    if (customLocation) {
+                        openAddLocationModal(customLocation);
+                    }
                 } else {
                     alert('Only custom locations can be edited. This location is from the JSON files.');
+                }
+            }
+        });
+    }
+    
+    const deleteLocationBtn = document.getElementById('deleteLocationBtn');
+    if (deleteLocationBtn) {
+        deleteLocationBtn.addEventListener('click', () => {
+            if (currentItem) {
+                if (isCustomLocation(currentItem)) {
+                    deleteCustomLocation(currentItem);
+                } else {
+                    alert('Only custom locations can be deleted. This location is from the JSON files.');
                 }
             }
         });
