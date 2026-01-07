@@ -1,0 +1,48 @@
+[
+  {
+    "name": "Yellowstone National Park",
+    "lat": 44.4280,
+    "lng": -110.5885,
+    "category": "National Park",
+    "status": "visited",
+    "notes": "First national park in the world. Amazing geysers and wildlife.",
+    "image_url": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e"
+  },
+  {
+    "name": "Serengeti National Park",
+    "lat": -2.3333,
+    "lng": 34.8333,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "Dream destination for the Great Migration safari experience.",
+    "image_url": "https://images.unsplash.com/photo-1549317336-206569e8475c"
+  },
+  {
+    "name": "St. Andrews Links",
+    "lat": 56.3373,
+    "lng": -2.8180,
+    "category": "Golf",
+    "status": "bucket_list",
+    "notes": "The Home of Golf. Would love to play the Old Course one day.",
+    "image_url": "https://images.unsplash.com/photo-1535131749006-b7f58c99034b"
+  },
+  {
+    "name": "Pebble Beach Golf Links",
+    "lat": 36.5681,
+    "lng": -121.9497,
+    "category": "Golf",
+    "status": "visited",
+    "notes": "Stunning coastal golf course with breathtaking Pacific Ocean views.",
+    "image_url": "https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa"
+  },
+  {
+    "name": "Bora Bora Beach",
+    "lat": -16.5000,
+    "lng": -151.7500,
+    "category": "Beach",
+    "status": "bucket_list",
+    "notes": "Paradise destination with crystal-clear turquoise waters and overwater bungalows.",
+    "image_url": "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4"
+  }
+]
+
