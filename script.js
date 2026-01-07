@@ -127,8 +127,8 @@ window.addEventListener('DOMContentLoaded', function() {
                     <circle cx="14" cy="1" r="1.8" fill="${iconColor}"/>
                 </g>
             `;
-        } else {
-            // Evergreen tree icon for National Parks (default) - brown pin
+        } else if (categoryLower.includes('national park')) {
+            // Evergreen tree icon for National Parks - brown pin
             color = isVisited ? '#92400e' : '#78350f'; // Brown shades
             // Evergreen tree icon: fuller tree with prominent trunk
             iconSvg = `
@@ -145,6 +145,17 @@ window.addEventListener('DOMContentLoaded', function() {
                     <path d="M14 6 L10 5 L18 5 Z" fill="${iconColor}"/>
                     <!-- Tree top point -->
                     <circle cx="14" cy="4.5" r="1.2" fill="${iconColor}"/>
+                </g>
+            `;
+        } else {
+            // Star icon for custom categories - purple pin
+            color = isVisited ? '#8b5cf6' : '#7c3aed'; // Purple shades
+            // Star icon for custom categories
+            iconSvg = `
+                <g transform="translate(6, 6)">
+                    <!-- Star shape -->
+                    <path d="M14 2 L16.5 9 L24 9 L17.5 13.5 L20 20 L14 15.5 L8 20 L10.5 13.5 L4 9 L11.5 9 Z" 
+                          fill="${iconColor}" stroke="${iconColor}" stroke-width="0.5"/>
                 </g>
             `;
         }
