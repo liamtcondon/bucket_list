@@ -12,6 +12,15 @@ window.addEventListener('DOMContentLoaded', function() {
         maxZoom: 19
     }).addTo(map);
 
+    // Initialize marker cluster group
+    const markerClusterGroup = L.markerClusterGroup({
+        maxClusterRadius: 50,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true
+    });
+    markerClusterGroup.addTo(map);
+
     // Sidebar elements
     const sidebar = document.getElementById('sidebar');
     const closeSidebarBtn = document.getElementById('closeSidebar');
@@ -21,19 +30,34 @@ window.addEventListener('DOMContentLoaded', function() {
     const locationNotesEl = document.getElementById('locationNotes');
     const visitedCheckbox = document.getElementById('visitedCheckbox');
     
+    // Progress bar elements
+    const worldProgressBar = document.getElementById('worldProgressBar');
+    const worldProgressPercent = document.getElementById('worldProgressPercent');
+    const categoryProgressBar = document.getElementById('categoryProgressBar');
+    const categoryProgressPercent = document.getElementById('categoryProgressPercent');
+    const categoryProgressLabel = document.getElementById('categoryProgressLabel');
+    
     // Local storage key
     const STORAGE_KEY = 'travelTracker_visited';
     
     // Current item being displayed in sidebar
     let currentItem = null;
     let currentMarkerData = null;
+    let currentFilter = 'all'; // 'all', 'visited', 'bucket'
     
-    // Local storage functions
-    function getVisitedStatus(name, originalStatus = null) {
+    // Generate unique ID for a location
+    function generateUniqueId(data) {
+        // Use name + category to ensure uniqueness
+        const category = data.category || 'National Park';
+        return `${data.name}_${category}`;
+    }
+    
+    // Local storage functions - now using unique IDs
+    function getVisitedStatus(uniqueId, originalStatus = null) {
         const visited = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-        // Check localStorage first, then fall back to original status
-        if (visited.hasOwnProperty(name)) {
-            return visited[name] === true;
+        // Check localStorage first
+        if (visited.hasOwnProperty(uniqueId)) {
+            return visited[uniqueId] === true;
         }
         // If no localStorage entry, use original status
         if (originalStatus !== null) {
@@ -46,60 +70,71 @@ window.addEventListener('DOMContentLoaded', function() {
         return false;
     }
     
-    function setVisitedStatus(name, isVisited) {
+    function setVisitedStatus(uniqueId, isVisited) {
         const visited = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-        visited[name] = isVisited;
+        visited[uniqueId] = isVisited;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(visited));
+        // Update progress bars after changing status
+        updateProgressBars();
     }
     
-    // Function to get marker style based on category and status
-    function getMarkerStyle(category, isVisited) {
-        // Determine color based on category
-        let color;
+    // Function to create custom icons based on category
+    function createCustomIcon(category, isVisited) {
         const categoryLower = (category || '').toLowerCase();
+        let iconPath;
+        let color;
+        const strokeColor = isVisited ? '#ffffff' : '#000000';
         
+        // Determine icon and color based on category
         if (categoryLower.includes('golf')) {
-            color = '#10b981'; // Green
+            // Flag icon for Golf - green pin
+            color = isVisited ? '#10b981' : '#059669'; // Green shades
+            iconPath = 'M4 6h14v12h-3l-3-2.5-3 2.5H4V6zm2 2v8h1.5l3.5-3 3.5 3H14V8H6z M6 8h8v2H6z';
         } else if (categoryLower.includes('beach')) {
-            color = '#3b82f6'; // Blue
-        } else if (categoryLower.includes('national park') || categoryLower.includes('hiking') || categoryLower.includes('park')) {
-            color = '#92400e'; // Brown
+            // Umbrella icon for Beach - blue pin
+            color = isVisited ? '#3b82f6' : '#2563eb'; // Blue shades
+            iconPath = 'M12 3C8 3 5 5.5 5 9v1h14V9c0-3.5-3-6-7-6zm0 2c2.5 0 4.5 1.5 5 3.5H7c.5-2 2.5-3.5 5-3.5zm-7 7v9h2v-5h10v5h2V12H5z';
         } else {
-            // Default color for unknown categories
-            color = '#6b7280'; // Gray
+            // Mountain icon for National Parks (default) - brown pin
+            color = isVisited ? '#92400e' : '#78350f'; // Brown shades
+            iconPath = 'M12 18L5 9l3.5 6.5L12 11l3.5 4.5L19 9l-7 9zm0-14L4 9h16l-8-5z';
         }
         
-        const iconSize = 40;
-        let html;
-        
-        if (isVisited) {
-            // Solid colored circle for visited
-            html = `<div style="
-                width: ${iconSize}px;
-                height: ${iconSize}px;
-                border-radius: 50%;
-                background-color: ${color};
-                border: 3px solid white;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            "></div>`;
-        } else {
-            // Hollow circle (outline only) for bucket list
-            html = `<div style="
-                width: ${iconSize}px;
-                height: ${iconSize}px;
-                border-radius: 50%;
-                background-color: transparent;
-                border: 4px solid ${color};
-                box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            "></div>`;
-        }
+        // Create pin shape with icon
+        const pinShape = `
+            <svg width="40" height="50" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+                        <feOffset dx="1" dy="1" result="offsetblur"/>
+                        <feComponentTransfer>
+                            <feFuncA type="linear" slope="0.3"/>
+                        </feComponentTransfer>
+                        <feMerge>
+                            <feMergeNode/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+                <path d="M20 0 C31.046 0 40 8.954 40 20 C40 30 20 50 20 50 C20 50 0 30 0 20 C0 8.954 8.954 0 20 0 Z" 
+                      fill="${color}" 
+                      stroke="${strokeColor}" 
+                      stroke-width="${isVisited ? '2.5' : '1.5'}"
+                      opacity="${isVisited ? '1' : '0.95'}"
+                      filter="url(#shadow)"/>
+                <path d="${iconPath}" 
+                      fill="${strokeColor}" 
+                      transform="translate(8, 6) scale(1.2)"
+                      opacity="${isVisited ? '1' : '0.9'}"/>
+            </svg>
+        `;
         
         return L.divIcon({
-            className: 'custom-marker',
-            html: html,
-            iconSize: [iconSize, iconSize],
-            iconAnchor: [iconSize / 2, iconSize / 2],
-            popupAnchor: [0, -iconSize / 2]
+            className: 'custom-marker-icon',
+            html: pinShape,
+            iconSize: [40, 50],
+            iconAnchor: [20, 50],
+            popupAnchor: [0, -50]
         });
     }
     
@@ -108,14 +143,14 @@ window.addEventListener('DOMContentLoaded', function() {
         const marker = markerData.marker;
         const data = markerData.data;
         
-        // Remove old marker
-        map.removeLayer(marker);
+        // Remove old marker from cluster group
+        markerClusterGroup.removeLayer(marker);
         
         // Get category - parks don't have category field, so use 'National Park'
         const category = data.category || 'National Park';
         
-        // Create new icon using getMarkerStyle
-        const icon = getMarkerStyle(category, isVisited);
+        // Create new icon using custom icon function
+        const icon = createCustomIcon(category, isVisited);
         
         // Create new marker with updated icon
         const newMarker = L.marker([data.lat, data.lng], { icon: icon });
@@ -128,10 +163,20 @@ window.addEventListener('DOMContentLoaded', function() {
         markerData.marker = newMarker;
         markerData.isVisited = isVisited;
         
-        // Add to map if it should be visible
-        if (map.hasLayer(marker)) {
-            newMarker.addTo(map);
+        // Add to cluster group if it should be visible based on current filter
+        if (shouldShowMarker(markerData)) {
+            markerClusterGroup.addLayer(newMarker);
         }
+    }
+
+    // Function to determine if marker should be shown based on current filter
+    function shouldShowMarker(markerData) {
+        if (currentFilter === 'visited') {
+            return markerData.isVisited;
+        } else if (currentFilter === 'bucket') {
+            return !markerData.isVisited;
+        }
+        return true; // 'all'
     }
 
     // Function to open sidebar with location/park data
@@ -144,11 +189,11 @@ window.addEventListener('DOMContentLoaded', function() {
         
         // Store current item data
         currentItem = data;
+        const uniqueId = generateUniqueId(data);
         
-        // Find the marker data for this item - must match exactly
+        // Find the marker data for this item using unique ID
         currentMarkerData = allMarkers.find(m => {
-            // Match by name (most reliable identifier)
-            return m.data.name === data.name;
+            return generateUniqueId(m.data) === uniqueId;
         });
         
         if (!currentMarkerData) {
@@ -161,15 +206,16 @@ window.addEventListener('DOMContentLoaded', function() {
         locationImageEl.src = data.image_url;
         locationImageEl.alt = data.name;
         // Handle both location (has category) and park (doesn't have category) formats
-        locationCategoryEl.textContent = data.category || 'National Park';
+        const category = data.category || 'National Park';
+        locationCategoryEl.textContent = category;
         locationNotesEl.textContent = data.notes || 'No notes available.';
         
         // Get original status from data (for parks: data.visited, for locations: data.status)
         const originalStatus = data.visited !== undefined ? data.visited : 
                               (data.status || null);
         
-        // Load visited status from localStorage (with fallback to original status)
-        const isVisited = getVisitedStatus(data.name, originalStatus);
+        // Load visited status from localStorage using unique ID
+        const isVisited = getVisitedStatus(uniqueId, originalStatus);
         
         // Update checkbox state (programmatic changes don't trigger events)
         if (visitedCheckbox) {
@@ -187,16 +233,18 @@ window.addEventListener('DOMContentLoaded', function() {
     // Handle checkbox change
     if (visitedCheckbox) {
         visitedCheckbox.addEventListener('change', function() {
-            // Make sure we have both currentItem and currentMarkerData
+            // Make sure we have both currentItem
             if (!currentItem) {
                 console.error('No current item when checkbox changed');
                 return;
             }
             
+            const uniqueId = generateUniqueId(currentItem);
+            
             if (!currentMarkerData) {
                 console.error('No current marker data when checkbox changed for:', currentItem.name);
-                // Try to find it again
-                currentMarkerData = allMarkers.find(m => m.data.name === currentItem.name);
+                // Try to find it again using unique ID
+                currentMarkerData = allMarkers.find(m => generateUniqueId(m.data) === uniqueId);
                 if (!currentMarkerData) {
                     console.error('Could not find marker data for:', currentItem.name);
                     return;
@@ -204,12 +252,11 @@ window.addEventListener('DOMContentLoaded', function() {
             }
             
             const isVisited = this.checked;
-            const itemName = currentItem.name;
             
-            console.log(`Updating visited status for ${itemName} to ${isVisited}`);
+            console.log(`Updating visited status for ${currentItem.name} (${uniqueId}) to ${isVisited}`);
             
-            // Save to localStorage
-            setVisitedStatus(itemName, isVisited);
+            // Save to localStorage using unique ID
+            setVisitedStatus(uniqueId, isVisited);
             
             // Update current marker data status
             currentMarkerData.isVisited = isVisited;
@@ -241,44 +288,39 @@ window.addEventListener('DOMContentLoaded', function() {
     // Store all markers for filtering
     const allMarkers = [];
 
-    // Filter functions
+    // Filter functions - updated to work with clustering
     function showVisited() {
+        currentFilter = 'visited';
+        markerClusterGroup.clearLayers();
         allMarkers.forEach(markerData => {
             if (markerData.isVisited) {
-                if (!map.hasLayer(markerData.marker)) {
-                    markerData.marker.addTo(map);
-                }
-            } else {
-                if (map.hasLayer(markerData.marker)) {
-                    map.removeLayer(markerData.marker);
-                }
+                markerClusterGroup.addLayer(markerData.marker);
             }
         });
         updateActiveButton('visited');
+        updateProgressBars();
     }
 
     function showBucketList() {
+        currentFilter = 'bucket';
+        markerClusterGroup.clearLayers();
         allMarkers.forEach(markerData => {
             if (!markerData.isVisited) {
-                if (!map.hasLayer(markerData.marker)) {
-                    markerData.marker.addTo(map);
-                }
-            } else {
-                if (map.hasLayer(markerData.marker)) {
-                    map.removeLayer(markerData.marker);
-                }
+                markerClusterGroup.addLayer(markerData.marker);
             }
         });
         updateActiveButton('bucket');
+        updateProgressBars();
     }
 
     function showAll() {
+        currentFilter = 'all';
+        markerClusterGroup.clearLayers();
         allMarkers.forEach(markerData => {
-            if (!map.hasLayer(markerData.marker)) {
-                markerData.marker.addTo(map);
-            }
+            markerClusterGroup.addLayer(markerData.marker);
         });
         updateActiveButton('all');
+        updateProgressBars();
     }
 
     function updateActiveButton(active) {
@@ -301,6 +343,55 @@ window.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Update progress bars
+    function updateProgressBars() {
+        if (!allMarkers.length) return;
+        
+        // Calculate world progress
+        const visitedCount = allMarkers.filter(m => m.isVisited).length;
+        const worldProgress = (visitedCount / allMarkers.length) * 100;
+        
+        if (worldProgressBar && worldProgressPercent) {
+            worldProgressBar.style.width = worldProgress + '%';
+            worldProgressPercent.textContent = Math.round(worldProgress) + '%';
+        }
+        
+        // Calculate category progress based on current filter or selected category
+        let categoryProgress = 0;
+        let categoryLabel = 'All Categories';
+        
+        if (currentFilter === 'visited' || currentFilter === 'bucket') {
+            // Show progress for current filter
+            const filteredMarkers = allMarkers.filter(m => {
+                if (currentFilter === 'visited') return m.isVisited;
+                return !m.isVisited;
+            });
+            const filteredVisited = filteredMarkers.filter(m => m.isVisited).length;
+            categoryProgress = filteredMarkers.length > 0 ? (filteredVisited / filteredMarkers.length) * 100 : 0;
+            categoryLabel = currentFilter === 'visited' ? 'Visited Filter' : 'Bucket List Filter';
+        } else if (currentItem) {
+            // Show progress for currently selected category
+            const selectedCategory = currentItem.category || 'National Park';
+            const categoryMarkers = allMarkers.filter(m => {
+                const cat = m.data.category || 'National Park';
+                return cat === selectedCategory;
+            });
+            const categoryVisitedCount = categoryMarkers.filter(m => m.isVisited).length;
+            categoryProgress = categoryMarkers.length > 0 ? (categoryVisitedCount / categoryMarkers.length) * 100 : 0;
+            categoryLabel = selectedCategory + ' Visited';
+        } else {
+            // Default: show overall progress
+            categoryProgress = worldProgress;
+            categoryLabel = 'All Categories';
+        }
+        
+        if (categoryProgressBar && categoryProgressPercent && categoryProgressLabel) {
+            categoryProgressBar.style.width = categoryProgress + '%';
+            categoryProgressPercent.textContent = Math.round(categoryProgress) + '%';
+            categoryProgressLabel.textContent = categoryLabel;
+        }
+    }
+
     // Add event listeners to filter buttons
     document.getElementById('showVisited').addEventListener('click', showVisited);
     document.getElementById('showBucketList').addEventListener('click', showBucketList);
@@ -309,7 +400,8 @@ window.addEventListener('DOMContentLoaded', function() {
     // Function to fly to marker and open sidebar
     function flyToLocation(data) {
         // Find the marker for this location
-        const markerData = allMarkers.find(m => m.data.name === data.name);
+        const uniqueId = generateUniqueId(data);
+        const markerData = allMarkers.find(m => generateUniqueId(m.data) === uniqueId);
         if (markerData && markerData.marker) {
             // Fly to the marker
             map.flyTo([data.lat, data.lng], 10, {
@@ -359,34 +451,42 @@ window.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(locations => {
             locations.forEach(location => {
+                const uniqueId = generateUniqueId(location);
+                
                 // Get visited status - check localStorage first, then use original status
                 const originalStatus = location.status || null;
-                const locationIsVisited = getVisitedStatus(location.name, originalStatus);
+                const locationIsVisited = getVisitedStatus(uniqueId, originalStatus);
                 
-                // Create icon using getMarkerStyle function
-                const locationIcon = getMarkerStyle(location.category, locationIsVisited);
+                // Create icon using custom icon function
+                const locationIcon = createCustomIcon(location.category, locationIsVisited);
 
-                // Add marker to map
+                // Create marker (don't add to map yet, will add to cluster group)
                 const locationMarker = L.marker([location.lat, location.lng], { icon: locationIcon });
-                locationMarker.addTo(map);
                 locationMarker.on('click', function(e) {
                     console.log('Marker clicked:', location.name);
                     e.originalEvent.stopPropagation();
                     openSidebar(location);
                 });
                 
-                // Store marker with its visited status
+                // Store marker with its visited status and unique ID
                 allMarkers.push({ 
                     marker: locationMarker, 
                     isVisited: locationIsVisited,
-                    data: location 
+                    data: location,
+                    uniqueId: uniqueId
                 });
+                
+                // Add to cluster group
+                markerClusterGroup.addLayer(locationMarker);
             });
             
             console.log(`Loaded ${locations.length} locations`);
             
             // Populate location list after loading locations
             populateLocationList();
+            
+            // Update progress bars
+            updateProgressBars();
 
             // Fit map to show all markers
             if (locations.length > 0) {
@@ -422,23 +522,28 @@ window.addEventListener('DOMContentLoaded', function() {
                         return;
                     }
                     
+                    const uniqueId = generateUniqueId(park);
+                    
                     // Get visited status - check localStorage first, then use original status
                     const originalParkStatus = park.visited !== undefined ? park.visited : false;
-                    const parkIsVisited = getVisitedStatus(park.name, originalParkStatus);
+                    const parkIsVisited = getVisitedStatus(uniqueId, originalParkStatus);
                     
-                    // Create icon using getMarkerStyle - parks are National Parks
-                    const parkIcon = getMarkerStyle('National Park', parkIsVisited);
+                    // Create icon using custom icon function - parks are National Parks
+                    const parkIcon = createCustomIcon('National Park', parkIsVisited);
                 
-                    // Create and add marker to map
+                    // Create marker
                     const parkMarker = L.marker([park.lat, park.lng], { icon: parkIcon });
-                    parkMarker.addTo(map);
                     
                     // Store marker with its visited status
                     allMarkers.push({ 
                         marker: parkMarker, 
                         isVisited: parkIsVisited,
-                        data: park 
+                        data: park,
+                        uniqueId: uniqueId
                     });
+                    
+                    // Add to cluster group
+                    markerClusterGroup.addLayer(parkMarker);
                     
                     // Add click handler to open sidebar
                     parkMarker.on('click', function(e) {
@@ -452,6 +557,9 @@ window.addEventListener('DOMContentLoaded', function() {
                 
                 // Update location list after loading parks
                 populateLocationList();
+                
+                // Update progress bars
+                updateProgressBars();
                 
                 // Show all by default
                 updateActiveButton('all');
