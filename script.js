@@ -107,39 +107,42 @@ window.addEventListener('DOMContentLoaded', function() {
         } else if (categoryLower.includes('beach')) {
             // Beach umbrella with sand for Beach - blue pin
             color = isVisited ? '#3b82f6' : '#2563eb'; // Blue shades
-            // Beach umbrella icon: umbrella canopy with sand mound
+            // Beach umbrella icon: umbrella canopy with wavy sand base
             iconSvg = `
                 <g transform="translate(4, 4)">
-                    <!-- Sand mound base -->
-                    <ellipse cx="14" cy="18" rx="9" ry="2.5" fill="${iconColor}" opacity="0.8"/>
+                    <!-- Sand waves (wavy base, not circular) -->
+                    <path d="M4 18 Q6 17 8 17.5 T12 17.5 T16 17.5 T20 17.5 T24 18 L24 20 L4 20 Z" 
+                          fill="${iconColor}" opacity="0.7"/>
                     <!-- Umbrella pole -->
-                    <line x1="14" y1="18" x2="14" y2="8" stroke="${iconColor}" stroke-width="2.5" stroke-linecap="round"/>
-                    <!-- Umbrella canopy (half circle / dome shape) -->
-                    <path d="M5 8 Q14 2 23 8" stroke="${iconColor}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-                    <path d="M5 8 Q14 3 23 8 L14 8 Z" fill="${iconColor}" opacity="0.9"/>
-                    <!-- Umbrella stripes -->
-                    <line x1="8" y1="6" x2="20" y2="6" stroke="${iconColor}" stroke-width="1" opacity="0.7"/>
-                    <line x1="7" y1="7" x2="21" y2="7" stroke="${iconColor}" stroke-width="1" opacity="0.7"/>
-                    <!-- Umbrella top tip -->
-                    <circle cx="14" cy="2" r="1.5" fill="${iconColor}"/>
+                    <line x1="14" y1="20" x2="14" y2="8" stroke="${iconColor}" stroke-width="2.5" stroke-linecap="round"/>
+                    <!-- Umbrella canopy (dome shape) -->
+                    <path d="M5 8 Q14 1 23 8" stroke="${iconColor}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    <path d="M5 8 Q14 2.5 23 8 L14 8 Z" fill="${iconColor}" opacity="0.95"/>
+                    <!-- Umbrella stripes (alternating) -->
+                    <line x1="8" y1="5.5" x2="20" y2="5.5" stroke="${iconColor}" stroke-width="1.2" opacity="0.6"/>
+                    <line x1="7" y1="6.5" x2="21" y2="6.5" stroke="${iconColor}" stroke-width="1.2" opacity="0.6"/>
+                    <!-- Umbrella top cap -->
+                    <circle cx="14" cy="1" r="1.8" fill="${iconColor}"/>
                 </g>
             `;
         } else {
             // Evergreen tree icon for National Parks (default) - brown pin
             color = isVisited ? '#92400e' : '#78350f'; // Brown shades
-            // Evergreen tree icon: triangular layers with trunk
+            // Evergreen tree icon: fuller tree with prominent trunk
             iconSvg = `
-                <g transform="translate(4, 3)">
-                    <!-- Tree trunk -->
-                    <rect x="12.5" y="15" width="3" height="5" fill="${iconColor}"/>
-                    <!-- Bottom layer of branches (largest triangle) -->
-                    <path d="M14 15 L6 12 L22 12 Z" fill="${iconColor}" opacity="0.95"/>
-                    <!-- Middle layer of branches -->
-                    <path d="M14 11 L8 9 L20 9 Z" fill="${iconColor}" opacity="0.9"/>
-                    <!-- Top layer of branches (smallest triangle) -->
-                    <path d="M14 7 L10 6 L18 6 Z" fill="${iconColor}"/>
+                <g transform="translate(4, 2)">
+                    <!-- Tree trunk (more prominent) -->
+                    <rect x="12" y="14" width="4" height="6" fill="${iconColor}" rx="0.5"/>
+                    <!-- Bottom layer of branches (largest triangle - fuller) -->
+                    <path d="M14 16 L4 11 L24 11 Z" fill="${iconColor}" opacity="0.95"/>
+                    <!-- Second layer of branches -->
+                    <path d="M14 12 L6 9 L22 9 Z" fill="${iconColor}" opacity="0.95"/>
+                    <!-- Third layer of branches -->
+                    <path d="M14 9 L8 7 L20 7 Z" fill="${iconColor}" opacity="0.9"/>
+                    <!-- Top layer of branches (smaller triangle) -->
+                    <path d="M14 6 L10 5 L18 5 Z" fill="${iconColor}"/>
                     <!-- Tree top point -->
-                    <circle cx="14" cy="5" r="1" fill="${iconColor}"/>
+                    <circle cx="14" cy="4.5" r="1.2" fill="${iconColor}"/>
                 </g>
             `;
         }
