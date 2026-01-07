@@ -45,6 +45,9 @@ window.addEventListener('DOMContentLoaded', function() {
     const CUSTOM_LOCATIONS_KEY = 'travelTracker_customLocations';
     const MUST_SEES_KEY = 'travelTracker_mustSees';
     const CHECKLIST_KEY = 'travelTracker_checklists';
+    const MODIFIED_LOCATIONS_KEY = 'travelTracker_modifiedLocations'; // Modified preset locations
+    const DELETED_LOCATIONS_KEY = 'travelTracker_deletedLocations'; // Deleted preset location IDs
+    const CATEGORIES_KEY = 'travelTracker_categories'; // Category colors and settings
     
     // Current item being displayed in sidebar
     let currentItem = null;
@@ -84,6 +87,84 @@ window.addEventListener('DOMContentLoaded', function() {
         updateProgressBars();
     }
     
+    // Category color management
+    const DEFAULT_CATEGORY_COLORS = {
+        'National Park': '#10b981', // Green (default)
+        'Golf': '#059669', // Green
+        'Beach': '#2563eb' // Blue
+    };
+    
+    // Get category color from storage or return default
+    function getCategoryColor(category) {
+        if (!category) return '#7c3aed'; // Default purple
+        
+        const categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || '{}');
+        const categoryLower = category.toLowerCase();
+        
+        // Check exact match first
+        if (categories[category]) {
+            return categories[category].color || DEFAULT_CATEGORY_COLORS[category] || '#7c3aed';
+        }
+        
+        // Check case-insensitive match
+        for (const [catName, catData] of Object.entries(categories)) {
+            if (catName.toLowerCase() === categoryLower) {
+                return catData.color || DEFAULT_CATEGORY_COLORS[catName] || '#7c3aed';
+            }
+        }
+        
+        // Check default colors
+        if (DEFAULT_CATEGORY_COLORS[category]) {
+            return DEFAULT_CATEGORY_COLORS[category];
+        }
+        
+        // Check default colors case-insensitive
+        for (const [catName, color] of Object.entries(DEFAULT_CATEGORY_COLORS)) {
+            if (catName.toLowerCase() === categoryLower) {
+                return color;
+            }
+        }
+        
+        return '#7c3aed'; // Default purple
+    }
+    
+    // Save category color
+    function saveCategoryColor(categoryName, color) {
+        const categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || '{}');
+        if (!categories[categoryName]) {
+            categories[categoryName] = {};
+        }
+        categories[categoryName].color = color;
+        localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+    }
+    
+    // Get category data (includes color)
+    function getCategoryData(categoryName) {
+        const categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || '{}');
+        return categories[categoryName] || { color: getCategoryColor(categoryName) };
+    }
+    
+    // Initialize default category colors
+    function initializeCategoryColors() {
+        const categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || '{}');
+        let updated = false;
+        
+        // Set default colors for existing categories if not already set
+        for (const [catName, defaultColor] of Object.entries(DEFAULT_CATEGORY_COLORS)) {
+            if (!categories[catName] || !categories[catName].color) {
+                if (!categories[catName]) {
+                    categories[catName] = {};
+                }
+                categories[catName].color = defaultColor;
+                updated = true;
+            }
+        }
+        
+        if (updated) {
+            localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+        }
+    }
+    
     // Function to create custom icons based on category
     function createCustomIcon(category, isVisited) {
         const categoryLower = (category || '').toLowerCase();
@@ -92,10 +173,34 @@ window.addEventListener('DOMContentLoaded', function() {
         const strokeColor = isVisited ? '#ffffff' : '#000000';
         const iconColor = isVisited ? '#ffffff' : '#000000';
         
-        // Determine icon and color based on category
+        // Get color from category storage
+        const baseColor = getCategoryColor(category);
+        
+        // Convert hex to RGB for visited/unvisited shades
+        const hexToRgb = (hex) => {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        };
+        
+        const rgb = hexToRgb(baseColor);
+        if (rgb) {
+            // Create lighter shade for visited, darker for unvisited
+            if (isVisited) {
+                color = `rgb(${Math.min(255, rgb.r + 40)}, ${Math.min(255, rgb.g + 40)}, ${Math.min(255, rgb.b + 40)})`;
+            } else {
+                color = baseColor;
+            }
+        } else {
+            color = isVisited ? '#10b981' : baseColor;
+        }
+        
+        // Determine icon based on category
         if (categoryLower.includes('golf')) {
-            // Flag icon for Golf - green pin
-            color = isVisited ? '#10b981' : '#059669'; // Green shades
+            // Flag icon for Golf
             // Flag icon: pole with triangular flag and golf hole
             iconSvg = `
                 <g transform="translate(6, 4)">
@@ -111,8 +216,7 @@ window.addEventListener('DOMContentLoaded', function() {
                 </g>
             `;
         } else if (categoryLower.includes('beach')) {
-            // Beach umbrella with sand for Beach - blue pin
-            color = isVisited ? '#3b82f6' : '#2563eb'; // Blue shades
+            // Beach umbrella with sand for Beach
             // Beach umbrella icon: umbrella canopy with wavy sand base
             iconSvg = `
                 <g transform="translate(4, 4)">
@@ -132,8 +236,7 @@ window.addEventListener('DOMContentLoaded', function() {
                 </g>
             `;
         } else if (categoryLower.includes('national park')) {
-            // Evergreen tree icon for National Parks - brown pin
-            color = isVisited ? '#92400e' : '#78350f'; // Brown shades
+            // Evergreen tree icon for National Parks
             // Evergreen tree icon: fuller tree with prominent trunk
             iconSvg = `
                 <g transform="translate(4, 2)">
@@ -152,8 +255,7 @@ window.addEventListener('DOMContentLoaded', function() {
                 </g>
             `;
         } else {
-            // Star icon for custom categories - purple pin
-            color = isVisited ? '#8b5cf6' : '#7c3aed'; // Purple shades
+            // Star icon for custom categories
             // Star icon for custom categories
             iconSvg = `
                 <g transform="translate(6, 6)">
@@ -674,16 +776,15 @@ window.addEventListener('DOMContentLoaded', function() {
         
         sidebar.classList.add('open');
         
-        // Show/hide edit and delete buttons based on whether it's a custom location
+        // Show edit and delete buttons for all locations (both custom and preset)
         const editBtn = document.getElementById('editLocationBtn');
         const deleteBtn = document.getElementById('deleteLocationBtn');
-        const isCustom = isCustomLocation(data);
         
         if (editBtn) {
-            editBtn.style.display = isCustom ? 'block' : 'none';
+            editBtn.style.display = 'block';
         }
         if (deleteBtn) {
-            deleteBtn.style.display = isCustom ? 'block' : 'none';
+            deleteBtn.style.display = 'block';
         }
         
         // Load checklist for this location
@@ -993,26 +1094,36 @@ window.addEventListener('DOMContentLoaded', function() {
             locations.forEach(location => {
                 const uniqueId = generateUniqueId(location);
                 
+                // Skip if this location has been deleted
+                if (isLocationDeleted(location)) {
+                    return;
+                }
+                
+                // Check if this location has been modified
+                const modifiedLocation = getModifiedLocation(location);
+                const locationToUse = modifiedLocation || location;
+                
                 // Get visited status - check localStorage first, then use original status
-                const originalStatus = location.status || null;
+                const originalStatus = locationToUse.status || null;
                 const locationIsVisited = getVisitedStatus(uniqueId, originalStatus);
                 
                 // Create icon using custom icon function
-                const locationIcon = createCustomIcon(location.category, locationIsVisited);
+                const locationIcon = createCustomIcon(locationToUse.category, locationIsVisited);
 
                 // Create marker (don't add to map yet, will add to cluster group)
-                const locationMarker = L.marker([location.lat, location.lng], { icon: locationIcon });
+                const locationMarker = L.marker([locationToUse.lat, locationToUse.lng], { icon: locationIcon });
                 locationMarker.on('click', function(e) {
-                    console.log('Marker clicked:', location.name);
+                    console.log('Marker clicked:', locationToUse.name);
                     e.originalEvent.stopPropagation();
-                    openSidebar(location);
+                    openSidebar(locationToUse);
                 });
                 
                 // Store marker with its visited status and unique ID
+                // Store the modified version if it exists, otherwise store original
                 allMarkers.push({ 
                     marker: locationMarker, 
                     isVisited: locationIsVisited,
-                    data: location,
+                    data: locationToUse,
                     uniqueId: uniqueId
                 });
                 
@@ -1027,6 +1138,9 @@ window.addEventListener('DOMContentLoaded', function() {
             
             // Update progress bars
             updateProgressBars();
+            
+            // Update category dropdown with loaded categories
+            updateCategoryDropdown();
 
             // Fit map to show all markers
             if (locations.length > 0) {
@@ -1064,21 +1178,30 @@ window.addEventListener('DOMContentLoaded', function() {
                     
                     const uniqueId = generateUniqueId(park);
                     
+                    // Skip if this park has been deleted
+                    if (isLocationDeleted(park)) {
+                        return;
+                    }
+                    
+                    // Check if this park has been modified
+                    const modifiedPark = getModifiedLocation(park);
+                    const parkToUse = modifiedPark || park;
+                    
                     // Get visited status - check localStorage first, then use original status
-                    const originalParkStatus = park.visited !== undefined ? park.visited : false;
+                    const originalParkStatus = parkToUse.visited !== undefined ? parkToUse.visited : false;
                     const parkIsVisited = getVisitedStatus(uniqueId, originalParkStatus);
                     
                     // Create icon using custom icon function - parks are National Parks
-                    const parkIcon = createCustomIcon('National Park', parkIsVisited);
+                    const parkIcon = createCustomIcon(parkToUse.category || 'National Park', parkIsVisited);
                 
                     // Create marker
-                    const parkMarker = L.marker([park.lat, park.lng], { icon: parkIcon });
+                    const parkMarker = L.marker([parkToUse.lat, parkToUse.lng], { icon: parkIcon });
                     
                     // Store marker with its visited status
                     allMarkers.push({ 
                         marker: parkMarker, 
                         isVisited: parkIsVisited,
-                        data: park,
+                        data: parkToUse,
                         uniqueId: uniqueId
                     });
                     
@@ -1087,9 +1210,9 @@ window.addEventListener('DOMContentLoaded', function() {
                     
                     // Add click handler to open sidebar
                     parkMarker.on('click', function(e) {
-                        console.log('Park marker clicked:', park.name);
+                        console.log('Park marker clicked:', parkToUse.name);
                         e.originalEvent.stopPropagation(); // Prevent map click event
-                        openSidebar(park);
+                        openSidebar(parkToUse);
                     });
                 });
                 
@@ -1100,6 +1223,9 @@ window.addEventListener('DOMContentLoaded', function() {
                 
                 // Update progress bars
                 updateProgressBars();
+                
+                // Update category dropdown with loaded categories
+                updateCategoryDropdown();
                 
                 // Show all by default
                 updateActiveButton('all');
@@ -1138,6 +1264,8 @@ window.addEventListener('DOMContentLoaded', function() {
             if (customLocations.length > 0) {
                 populateLocationList();
                 updateProgressBars();
+                // Update category dropdown with loaded categories
+                updateCategoryDropdown();
             }
         } catch (error) {
             console.error('Error loading custom locations:', error);
@@ -1173,6 +1301,16 @@ window.addEventListener('DOMContentLoaded', function() {
             populateLocationList();
             updateProgressBars();
             
+            // Update category dropdown to include new category if it's new
+            updateCategoryDropdown();
+            
+            // Show success toast
+            showToast('Location added successfully!', 'success');
+            
+            // Clear form and close modal
+            addLocationForm.reset();
+            closeAddLocationModalFunc();
+            
             // Fly to new location
             map.flyTo([location.lat, location.lng], 10, { duration: 1.5 });
             setTimeout(() => {
@@ -1180,6 +1318,7 @@ window.addEventListener('DOMContentLoaded', function() {
             }, 800);
         } catch (error) {
             console.error('Error saving custom location:', error);
+            showToast('Error adding location. Please try again.', 'error');
         }
     }
     
@@ -1193,11 +1332,37 @@ window.addEventListener('DOMContentLoaded', function() {
     const modalTitle = document.getElementById('modalTitle');
     let isEditingLocation = false;
     let editingLocationData = null;
+    let originalLocationData = null; // Store original location when editing preset
     
     function openAddLocationModal(editData = null) {
         if (addLocationModal) {
+            // Update category dropdown with current categories before opening
+            updateCategoryDropdown();
+            
             isEditingLocation = editData !== null;
             editingLocationData = editData;
+            
+            // Store original location data if editing (needed for preset locations)
+            if (isEditingLocation) {
+                // For preset locations, we need to find the true original to save modifications
+                if (!isCustomLocation(editData)) {
+                    // If editData has an id, it's from locations.json (the original)
+                    if (editData.id !== undefined) {
+                        originalLocationData = editData;
+                    } else if (editData._originalUniqueId) {
+                        // It's a modified preset - use the stored original uniqueId to find the original
+                        const originalLocation = getOriginalLocationForModified(editData);
+                        originalLocationData = originalLocation || editData;
+                    } else {
+                        // Modified preset without _originalUniqueId - try to find it
+                        originalLocationData = editData; // Will be handled in updateLocation
+                    }
+                } else {
+                    originalLocationData = editData;
+                }
+            } else {
+                originalLocationData = null;
+            }
             
             if (isEditingLocation) {
                 modalTitle.textContent = 'Edit Location';
@@ -1205,8 +1370,27 @@ window.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('newLocationName').value = editData.name || '';
                 document.getElementById('newLocationLat').value = editData.lat || '';
                 document.getElementById('newLocationLng').value = editData.lng || '';
-                document.getElementById('newLocationCategorySelect').value = '';
-                document.getElementById('newLocationCategory').value = editData.category || '';
+                
+                // Set category - try select first, then input
+                const categorySelect = document.getElementById('newLocationCategorySelect');
+                const categoryInput = document.getElementById('newLocationCategory');
+                if (editData.category) {
+                    // Check if category exists in dropdown
+                    const categoryExists = Array.from(categorySelect.options).some(
+                        opt => opt.value === editData.category
+                    );
+                    if (categoryExists) {
+                        categorySelect.value = editData.category;
+                        categoryInput.value = '';
+                    } else {
+                        categorySelect.value = '';
+                        categoryInput.value = editData.category || '';
+                    }
+                } else {
+                    categorySelect.value = '';
+                    categoryInput.value = '';
+                }
+                
                 document.getElementById('newLocationNotes').value = editData.notes || '';
                 document.getElementById('newLocationImageUrl').value = editData.image_url || '';
             } else {
@@ -1214,8 +1398,86 @@ window.addEventListener('DOMContentLoaded', function() {
                 addLocationForm.reset();
             }
             
+            // Hide color picker when opening modal
+            if (categoryColorPicker) {
+                categoryColorPicker.classList.add('hidden');
+            }
+            
             addLocationModal.classList.remove('hidden');
+            
+            // Auto-focus the name input field when modal opens (only for new locations)
+            if (!isEditingLocation) {
+                setTimeout(() => {
+                    const nameInput = document.getElementById('newLocationName');
+                    if (nameInput) {
+                        nameInput.focus();
+                    }
+                }, 100);
+            }
         }
+    }
+    
+    // Function to get default image URL based on category
+    function getDefaultImageForCategory(category) {
+        if (!category) return '';
+        
+        const categoryLower = category.toLowerCase();
+        const defaultImages = {
+            'national park': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
+            'golf': 'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=800',
+            'beach': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
+            'mountain': 'https://images.unsplash.com/photo-1464822759844-d150ad6bfc46?w=800',
+            'city': 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800',
+            'museum': 'https://images.unsplash.com/photo-1554907984-15263bfd63bd?w=800',
+            'restaurant': 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800',
+            'hotel': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800'
+        };
+        
+        // Check for exact match first
+        if (defaultImages[categoryLower]) {
+            return defaultImages[categoryLower];
+        }
+        
+        // Check for partial matches
+        for (const [key, url] of Object.entries(defaultImages)) {
+            if (categoryLower.includes(key) || key.includes(categoryLower)) {
+                return url;
+            }
+        }
+        
+        // Default generic image
+        return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800';
+    }
+    
+    // Function to show toast notification
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        
+        if (!toast || !toastMessage) return;
+        
+        // Set message
+        toastMessage.textContent = message;
+        
+        // Set color based on type
+        toast.className = `fixed top-4 right-4 text-white px-6 py-3 rounded-lg shadow-lg z-[3000] transform translate-x-full transition-transform duration-300 flex items-center gap-3`;
+        if (type === 'success') {
+            toast.classList.add('bg-green-500');
+        } else if (type === 'error') {
+            toast.classList.add('bg-red-500');
+        } else {
+            toast.classList.add('bg-blue-500');
+        }
+        
+        // Show toast
+        setTimeout(() => {
+            toast.classList.remove('translate-x-full');
+        }, 10);
+        
+        // Hide toast after 3 seconds
+        setTimeout(() => {
+            toast.classList.add('translate-x-full');
+        }, 3000);
     }
     
     function closeAddLocationModalFunc() {
@@ -1224,6 +1486,11 @@ window.addEventListener('DOMContentLoaded', function() {
             addLocationForm.reset();
             isEditingLocation = false;
             editingLocationData = null;
+            // Hide color picker
+            const categoryColorPicker = document.getElementById('categoryColorPicker');
+            if (categoryColorPicker) {
+                categoryColorPicker.classList.add('hidden');
+            }
         }
     }
     
@@ -1234,17 +1501,140 @@ window.addEventListener('DOMContentLoaded', function() {
         return customLocations.some(loc => generateUniqueId(loc) === uniqueId);
     }
     
-    // Delete custom location
-    function deleteCustomLocation(location) {
+    // Check if a preset location has been deleted
+    function isLocationDeleted(location) {
+        const uniqueId = generateUniqueId(location);
+        const deletedLocations = JSON.parse(localStorage.getItem(DELETED_LOCATIONS_KEY) || '[]');
+        return deletedLocations.includes(uniqueId);
+    }
+    
+    // Get modified version of a preset location if it exists
+    function getModifiedLocation(location) {
+        const uniqueId = generateUniqueId(location);
+        const modifiedLocations = JSON.parse(localStorage.getItem(MODIFIED_LOCATIONS_KEY) || '{}');
+        
+        // First try direct lookup
+        if (modifiedLocations[uniqueId]) {
+            return modifiedLocations[uniqueId];
+        }
+        
+        // If not found, search through all modifications to find one that matches
+        // This handles the case where name/category changed
+        for (const modifiedLoc of Object.values(modifiedLocations)) {
+            if (generateUniqueId(modifiedLoc) === uniqueId) {
+                return modifiedLoc;
+            }
+        }
+        
+        return null;
+    }
+    
+    // Get the original location for a modified preset location
+    function getOriginalLocationForModified(modifiedLocation) {
+        if (!modifiedLocation._originalUniqueId) {
+            return null;
+        }
+        
+        // We need to find the original location from locations.json
+        // For now, we'll search through allMarkers to find a location with matching uniqueId
+        const originalUniqueId = modifiedLocation._originalUniqueId;
+        const originalMarker = allMarkers.find(m => {
+            // Check if this marker's data is the original (has id and matches uniqueId)
+            if (m.data.id !== undefined) {
+                return generateUniqueId(m.data) === originalUniqueId;
+            }
+            return false;
+        });
+        
+        return originalMarker ? originalMarker.data : null;
+    }
+    
+    // Save a modified preset location
+    // originalLocation should be the true original from locations.json
+    // modifiedLocation is the updated version
+    function saveModifiedLocation(originalLocation, modifiedLocation) {
+        // Use the original location's uniqueId as the key
+        // This ensures we can always find the modification even if name/category changes
+        const originalUniqueId = generateUniqueId(originalLocation);
+        const modifiedLocations = JSON.parse(localStorage.getItem(MODIFIED_LOCATIONS_KEY) || '{}');
+        
+        // Store the original uniqueId in the modified location for easy lookup
+        modifiedLocation._originalUniqueId = originalUniqueId;
+        
+        modifiedLocations[originalUniqueId] = modifiedLocation;
+        localStorage.setItem(MODIFIED_LOCATIONS_KEY, JSON.stringify(modifiedLocations));
+    }
+    
+    // Find the original location for a modified preset location
+    function findOriginalLocation(modifiedLocation) {
+        // If it has an id, it's from locations.json (the original)
+        if (modifiedLocation.id !== undefined) {
+            return modifiedLocation;
+        }
+        
+        // Otherwise, search through modifications to find which original it belongs to
+        const modifiedLocations = JSON.parse(localStorage.getItem(MODIFIED_LOCATIONS_KEY) || '{}');
+        const currentUniqueId = generateUniqueId(modifiedLocation);
+        
+        // Search for the original key
+        for (const [originalKey, modifiedLoc] of Object.entries(modifiedLocations)) {
+            if (generateUniqueId(modifiedLoc) === currentUniqueId) {
+                // Found it - but we need the original location data
+                // We'll need to fetch it from locations.json or reconstruct it
+                // For now, return null and we'll handle it differently
+                return null;
+            }
+        }
+        
+        return null;
+    }
+    
+    // Mark a preset location as deleted
+    function markLocationAsDeleted(location) {
+        const uniqueId = generateUniqueId(location);
+        const deletedLocations = JSON.parse(localStorage.getItem(DELETED_LOCATIONS_KEY) || '[]');
+        if (!deletedLocations.includes(uniqueId)) {
+            deletedLocations.push(uniqueId);
+            localStorage.setItem(DELETED_LOCATIONS_KEY, JSON.stringify(deletedLocations));
+        }
+    }
+    
+    // Unmark a preset location as deleted (for restore functionality)
+    function unmarkLocationAsDeleted(location) {
+        const uniqueId = generateUniqueId(location);
+        const deletedLocations = JSON.parse(localStorage.getItem(DELETED_LOCATIONS_KEY) || '[]');
+        const filtered = deletedLocations.filter(id => id !== uniqueId);
+        localStorage.setItem(DELETED_LOCATIONS_KEY, JSON.stringify(filtered));
+    }
+    
+    // Delete a modified preset location (remove from modifications)
+    function removeModifiedLocation(location) {
+        const uniqueId = generateUniqueId(location);
+        const modifiedLocations = JSON.parse(localStorage.getItem(MODIFIED_LOCATIONS_KEY) || '{}');
+        delete modifiedLocations[uniqueId];
+        localStorage.setItem(MODIFIED_LOCATIONS_KEY, JSON.stringify(modifiedLocations));
+    }
+    
+    // Delete location (works for both custom and preset locations)
+    function deleteLocation(location) {
         if (!confirm(`Are you sure you want to delete "${location.name}"? This action cannot be undone.`)) {
             return;
         }
         
         try {
             const uniqueId = generateUniqueId(location);
-            const customLocations = JSON.parse(localStorage.getItem(CUSTOM_LOCATIONS_KEY) || '[]');
-            const filteredLocations = customLocations.filter(loc => generateUniqueId(loc) !== uniqueId);
-            localStorage.setItem(CUSTOM_LOCATIONS_KEY, JSON.stringify(filteredLocations));
+            
+            // Check if it's a custom location
+            if (isCustomLocation(location)) {
+                // Delete from custom locations
+                const customLocations = JSON.parse(localStorage.getItem(CUSTOM_LOCATIONS_KEY) || '[]');
+                const filteredLocations = customLocations.filter(loc => generateUniqueId(loc) !== uniqueId);
+                localStorage.setItem(CUSTOM_LOCATIONS_KEY, JSON.stringify(filteredLocations));
+            } else {
+                // It's a preset location - mark as deleted and remove any modifications
+                markLocationAsDeleted(location);
+                removeModifiedLocation(location);
+            }
             
             // Remove marker from map
             const markerData = allMarkers.find(m => generateUniqueId(m.data) === uniqueId);
@@ -1261,12 +1651,18 @@ window.addEventListener('DOMContentLoaded', function() {
             delete allMustSees[uniqueId];
             localStorage.setItem(MUST_SEES_KEY, JSON.stringify(allMustSees));
             
+            // Remove checklist for this location
+            const allChecklists = JSON.parse(localStorage.getItem(CHECKLIST_KEY) || '{}');
+            delete allChecklists[uniqueId];
+            localStorage.setItem(CHECKLIST_KEY, JSON.stringify(allChecklists));
+            
             // Update UI
             populateLocationList();
             updateProgressBars();
+            updateCategoryDropdown();
             closeSidebar();
         } catch (error) {
-            console.error('Error deleting custom location:', error);
+            console.error('Error deleting location:', error);
             alert('Error deleting location. Please try again.');
         }
     }
@@ -1274,15 +1670,26 @@ window.addEventListener('DOMContentLoaded', function() {
     if (editLocationBtn) {
         editLocationBtn.addEventListener('click', () => {
             if (currentItem) {
+                const uniqueId = generateUniqueId(currentItem);
+                let locationToEdit = null;
+                
+                // Check if it's a custom location
                 if (isCustomLocation(currentItem)) {
-                    const uniqueId = generateUniqueId(currentItem);
                     const customLocations = JSON.parse(localStorage.getItem(CUSTOM_LOCATIONS_KEY) || '[]');
-                    const customLocation = customLocations.find(loc => generateUniqueId(loc) === uniqueId);
-                    if (customLocation) {
-                        openAddLocationModal(customLocation);
-                    }
+                    locationToEdit = customLocations.find(loc => generateUniqueId(loc) === uniqueId);
                 } else {
-                    alert('Only custom locations can be edited. This location is from the JSON files.');
+                    // It's a preset location - check for modifications first
+                    const modifiedLocation = getModifiedLocation(currentItem);
+                    if (modifiedLocation) {
+                        locationToEdit = modifiedLocation;
+                    } else {
+                        // Use the original preset location
+                        locationToEdit = currentItem;
+                    }
+                }
+                
+                if (locationToEdit) {
+                    openAddLocationModal(locationToEdit);
                 }
             }
         });
@@ -1292,23 +1699,78 @@ window.addEventListener('DOMContentLoaded', function() {
     if (deleteLocationBtn) {
         deleteLocationBtn.addEventListener('click', () => {
             if (currentItem) {
-                if (isCustomLocation(currentItem)) {
-                    deleteCustomLocation(currentItem);
-                } else {
-                    alert('Only custom locations can be deleted. This location is from the JSON files.');
-                }
+                deleteLocation(currentItem);
             }
         });
     }
     
-    // Sync category select and input
+    // Function to get all unique categories from all markers
+    function getAllCategories() {
+        const categories = new Set();
+        allMarkers.forEach(markerData => {
+            const category = markerData.data.category || 'National Park';
+            if (category && category.trim() !== '') {
+                categories.add(category);
+            }
+        });
+        return Array.from(categories).sort();
+    }
+    
+    // Function to update the category dropdown with current categories
+    function updateCategoryDropdown() {
+        const categorySelect = document.getElementById('newLocationCategorySelect');
+        if (!categorySelect) return;
+        
+        // Get current selected value to preserve it
+        const currentValue = categorySelect.value;
+        
+        // Clear existing options except the first one
+        categorySelect.innerHTML = '<option value="">Select or type...</option>';
+        
+        // Get all unique categories
+        const categories = getAllCategories();
+        
+        // Add each category as an option
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category;
+            categorySelect.appendChild(option);
+        });
+        
+        // Restore previous selection if it still exists
+        if (currentValue && categories.includes(currentValue)) {
+            categorySelect.value = currentValue;
+        }
+    }
+    
+    // Sync category select and input, handle color picker
     const categorySelect = document.getElementById('newLocationCategorySelect');
     const categoryInput = document.getElementById('newLocationCategory');
+    const categoryColorPicker = document.getElementById('categoryColorPicker');
+    const categoryColorSelect = document.getElementById('categoryColorSelect');
+    const categoryColorInput = document.getElementById('categoryColorInput');
     
     if (categorySelect && categoryInput) {
         categorySelect.addEventListener('change', (e) => {
             if (e.target.value) {
                 categoryInput.value = e.target.value;
+                // Hide color picker when selecting existing category
+                if (categoryColorPicker) {
+                    categoryColorPicker.classList.add('hidden');
+                }
+                
+                // Auto-suggest image URL based on selected category (only if not editing and image field is empty)
+                const imageUrlInput = document.getElementById('newLocationImageUrl');
+                const modalTitle = document.getElementById('modalTitle');
+                const isEditing = modalTitle && modalTitle.textContent === 'Edit Location';
+                
+                if (imageUrlInput && !imageUrlInput.value.trim() && !isEditing) {
+                    const suggestedImage = getDefaultImageForCategory(e.target.value);
+                    if (suggestedImage) {
+                        imageUrlInput.value = suggestedImage;
+                    }
+                }
             }
         });
         
@@ -1316,7 +1778,57 @@ window.addEventListener('DOMContentLoaded', function() {
             if (e.target.value && categorySelect.value) {
                 categorySelect.value = '';
             }
+            
+            // Show color picker for new categories
+            const inputValue = e.target.value.trim();
+            if (categoryColorPicker) {
+                const categories = getAllCategories();
+                const isNewCategory = inputValue && !categories.includes(inputValue);
+                
+                if (isNewCategory) {
+                    categoryColorPicker.classList.remove('hidden');
+                    // Set default color to green (National Parks default)
+                    if (categoryColorInput) {
+                        categoryColorInput.value = '#10b981';
+                    }
+                    if (categoryColorSelect) {
+                        categoryColorSelect.value = '#10b981';
+                    }
+                } else {
+                    categoryColorPicker.classList.add('hidden');
+                }
+            }
+            
+            // Auto-suggest image URL based on category (only if not editing and image field is empty)
+            if (inputValue) {
+                const imageUrlInput = document.getElementById('newLocationImageUrl');
+                // Check if we're editing by checking if modal title says "Edit"
+                const modalTitle = document.getElementById('modalTitle');
+                const isEditing = modalTitle && modalTitle.textContent === 'Edit Location';
+                
+                if (imageUrlInput && !imageUrlInput.value.trim() && !isEditing) {
+                    const suggestedImage = getDefaultImageForCategory(inputValue);
+                    if (suggestedImage) {
+                        imageUrlInput.value = suggestedImage;
+                    }
+                }
+            }
         });
+        
+        // Sync color picker inputs
+        if (categoryColorSelect && categoryColorInput) {
+            categoryColorSelect.addEventListener('change', (e) => {
+                if (categoryColorInput) {
+                    categoryColorInput.value = e.target.value;
+                }
+            });
+            
+            categoryColorInput.addEventListener('change', (e) => {
+                if (categoryColorSelect) {
+                    categoryColorSelect.value = e.target.value;
+                }
+            });
+        }
     }
     
     if (addLocationBtn) {
@@ -1345,57 +1857,93 @@ window.addEventListener('DOMContentLoaded', function() {
         return { valid: true };
     }
     
-    // Update custom location in localStorage
-    function updateCustomLocation(oldUniqueId, updatedLocation) {
+    // Update location (works for both custom and preset locations)
+    function updateLocation(originalLocation, updatedLocation) {
         try {
-            const customLocations = JSON.parse(localStorage.getItem(CUSTOM_LOCATIONS_KEY) || '[]');
-            const index = customLocations.findIndex(loc => generateUniqueId(loc) === oldUniqueId);
+            const oldUniqueId = generateUniqueId(originalLocation);
+            const isCustom = isCustomLocation(originalLocation);
             
-            if (index !== -1) {
-                // Update the location
-                customLocations[index] = updatedLocation;
-                localStorage.setItem(CUSTOM_LOCATIONS_KEY, JSON.stringify(customLocations));
+            if (isCustom) {
+                // Update custom location
+                const customLocations = JSON.parse(localStorage.getItem(CUSTOM_LOCATIONS_KEY) || '[]');
+                const index = customLocations.findIndex(loc => generateUniqueId(loc) === oldUniqueId);
                 
-                // Remove old marker
-                const markerData = allMarkers.find(m => generateUniqueId(m.data) === oldUniqueId);
-                if (markerData) {
-                    markerClusterGroup.removeLayer(markerData.marker);
-                    const markerIndex = allMarkers.indexOf(markerData);
-                    if (markerIndex !== -1) {
-                        allMarkers.splice(markerIndex, 1);
+                if (index !== -1) {
+                    customLocations[index] = updatedLocation;
+                    localStorage.setItem(CUSTOM_LOCATIONS_KEY, JSON.stringify(customLocations));
+                }
+            } else {
+                // It's a preset location - save as modification
+                // If originalLocation doesn't have an id, it might already be modified
+                // In that case, we need to find the true original
+                let trueOriginal = originalLocation;
+                
+                if (originalLocation.id === undefined) {
+                    // This is a modified location - we need to find the true original
+                    // Search through modifications to find the original key
+                    const modifiedLocations = JSON.parse(localStorage.getItem(MODIFIED_LOCATIONS_KEY) || '{}');
+                    const currentUniqueId = generateUniqueId(originalLocation);
+                    
+                    for (const [originalKey, modifiedLoc] of Object.entries(modifiedLocations)) {
+                        if (generateUniqueId(modifiedLoc) === currentUniqueId) {
+                            // Found the original key - but we need the original location data
+                            // We'll need to fetch it from locations.json
+                            // For now, try to find it in allMarkers by searching for a location with matching id
+                            // Actually, we can't easily do this without storing more info
+                            // So we'll use originalLocation and it should work if the uniqueId hasn't changed
+                            trueOriginal = originalLocation;
+                            break;
+                        }
                     }
                 }
                 
-                // Add updated location
-                const uniqueId = generateUniqueId(updatedLocation);
-                const locationIsVisited = getVisitedStatus(uniqueId, updatedLocation.status === 'visited');
-                const locationIcon = createCustomIcon(updatedLocation.category, locationIsVisited);
-                const locationMarker = L.marker([updatedLocation.lat, updatedLocation.lng], { icon: locationIcon });
-                
-                locationMarker.on('click', function(e) {
-                    e.originalEvent.stopPropagation();
-                    openSidebar(updatedLocation);
-                });
-                
-                allMarkers.push({
-                    marker: locationMarker,
-                    isVisited: locationIsVisited,
-                    data: updatedLocation,
-                    uniqueId: uniqueId
-                });
-                
-                markerClusterGroup.addLayer(locationMarker);
-                populateLocationList();
-                updateProgressBars();
-                
-                // Fly to updated location
-                map.flyTo([updatedLocation.lat, updatedLocation.lng], 10, { duration: 1.5 });
-                setTimeout(() => {
-                    openSidebar(updatedLocation);
-                }, 800);
+                saveModifiedLocation(trueOriginal, updatedLocation);
             }
+            
+            // Remove old marker
+            const markerData = allMarkers.find(m => generateUniqueId(m.data) === oldUniqueId);
+            if (markerData) {
+                markerClusterGroup.removeLayer(markerData.marker);
+                const markerIndex = allMarkers.indexOf(markerData);
+                if (markerIndex !== -1) {
+                    allMarkers.splice(markerIndex, 1);
+                }
+            }
+            
+            // Add updated location
+            const uniqueId = generateUniqueId(updatedLocation);
+            const locationIsVisited = getVisitedStatus(uniqueId, updatedLocation.status === 'visited');
+            const locationIcon = createCustomIcon(updatedLocation.category, locationIsVisited);
+            const locationMarker = L.marker([updatedLocation.lat, updatedLocation.lng], { icon: locationIcon });
+            
+            locationMarker.on('click', function(e) {
+                e.originalEvent.stopPropagation();
+                openSidebar(updatedLocation);
+            });
+            
+            allMarkers.push({
+                marker: locationMarker,
+                isVisited: locationIsVisited,
+                data: updatedLocation,
+                uniqueId: uniqueId
+            });
+            
+            markerClusterGroup.addLayer(locationMarker);
+            populateLocationList();
+            updateProgressBars();
+            
+            // Update category dropdown to include new category if it's new
+            updateCategoryDropdown();
+            
+            // Show success toast (will be shown by form submission handler)
+            // Fly to updated location
+            map.flyTo([updatedLocation.lat, updatedLocation.lng], 10, { duration: 1.5 });
+            setTimeout(() => {
+                openSidebar(updatedLocation);
+            }, 800);
         } catch (error) {
-            console.error('Error updating custom location:', error);
+            console.error('Error updating location:', error);
+            showToast('Error updating location. Please try again.', 'error');
         }
     }
     
@@ -1416,6 +1964,17 @@ window.addEventListener('DOMContentLoaded', function() {
             const categoryInput = document.getElementById('newLocationCategory').value.trim();
             const category = categorySelect || categoryInput;
             
+            // Save category color if it's a new category
+            if (category && categoryInput) {
+                const categories = getAllCategories();
+                const isNewCategory = !categories.includes(category);
+                
+                if (isNewCategory && categoryColorInput) {
+                    const selectedColor = categoryColorInput.value || categoryColorSelect?.value || '#10b981';
+                    saveCategoryColor(category, selectedColor);
+                }
+            }
+            
             const locationData = {
                 name: document.getElementById('newLocationName').value.trim(),
                 lat: lat,
@@ -1432,16 +1991,40 @@ window.addEventListener('DOMContentLoaded', function() {
             }
             
             if (isEditingLocation && editingLocationData) {
-                const oldUniqueId = generateUniqueId(editingLocationData);
-                updateCustomLocation(oldUniqueId, locationData);
+                // Use originalLocationData if set, otherwise use editingLocationData
+                const originalLocation = originalLocationData || editingLocationData;
+                
+                // If it's a preset location, preserve id and checklist if they exist
+                if (!isCustomLocation(editingLocationData)) {
+                    if (editingLocationData.id !== undefined) {
+                        locationData.id = editingLocationData.id;
+                    }
+                    // Preserve checklist if it exists
+                    if (editingLocationData.checklist) {
+                        locationData.checklist = editingLocationData.checklist;
+                    }
+                }
+                
+                updateLocation(originalLocation, locationData);
+                
+                // Show success toast for edit
+                showToast('Location updated successfully!', 'success');
+                
+                // Clear form and close modal
+                addLocationForm.reset();
+                closeAddLocationModalFunc();
             } else {
                 saveCustomLocation(locationData);
+                // Note: saveCustomLocation now handles toast and form clearing
             }
             
             closeAddLocationModalFunc();
         });
     }
     
+    
+    // Initialize category colors (set defaults)
+    initializeCategoryColors();
     
     // Load parks first, then custom locations
     loadParks();
