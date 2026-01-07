@@ -26,6 +26,9 @@ window.addEventListener('DOMContentLoaded', function() {
     const closeSidebarBtn = document.getElementById('closeSidebar');
     const locationNameEl = document.getElementById('locationName');
     const locationImageEl = document.getElementById('locationImage');
+    const locationImageContainer = document.getElementById('locationImageContainer');
+    const imageLoading = document.getElementById('imageLoading');
+    const imageError = document.getElementById('imageError');
     const locationCategoryEl = document.getElementById('locationCategory');
     const locationNotesEl = document.getElementById('locationNotes');
     const visitedCheckbox = document.getElementById('visitedCheckbox');
@@ -472,8 +475,155 @@ window.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Function to fetch location image from Unsplash API
+    // Note: For production, consider using Unsplash API with an access key for better reliability
+    // Sign up at https://unsplash.com/developers and add: const UNSPLASH_ACCESS_KEY = 'your-key-here';
+    async function getLocationImage(locationName) {
+        try {
+            // Use Unsplash Source API (free, no authentication required, but deprecated)
+            // For better reliability, use the official Unsplash API with an access key
+            const query = encodeURIComponent(`${locationName} landmark`);
+            
+            // Try Unsplash Source API first
+            const imageUrl = `https://source.unsplash.com/800x600/?${query}`;
+            
+            // Return a promise that resolves when image loads
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                let timeoutId;
+                
+                const cleanup = () => {
+                    if (timeoutId) clearTimeout(timeoutId);
+                };
+                
+                img.onload = () => {
+                    cleanup();
+                    resolve(imageUrl);
+                };
+                
+                img.onerror = () => {
+                    cleanup();
+                    // Fallback: try without "landmark" keyword
+                    const fallbackQuery = encodeURIComponent(locationName);
+                    const fallbackUrl = `https://source.unsplash.com/800x600/?${fallbackQuery}`;
+                    const fallbackImg = new Image();
+                    fallbackImg.crossOrigin = 'anonymous';
+                    let fallbackTimeoutId;
+                    
+                    const fallbackCleanup = () => {
+                        if (fallbackTimeoutId) clearTimeout(fallbackTimeoutId);
+                    };
+                    
+                    fallbackImg.onload = () => {
+                        fallbackCleanup();
+                        resolve(fallbackUrl);
+                    };
+                    
+                    fallbackImg.onerror = () => {
+                        fallbackCleanup();
+                        reject(new Error('Failed to load image from Unsplash'));
+                    };
+                    
+                    // Set timeout for fallback (8 seconds)
+                    fallbackTimeoutId = setTimeout(() => {
+                        if (!fallbackImg.complete) {
+                            fallbackCleanup();
+                            reject(new Error('Image load timeout'));
+                        }
+                    }, 8000);
+                    
+                    fallbackImg.src = fallbackUrl;
+                };
+                
+                // Set timeout to avoid hanging (8 seconds)
+                timeoutId = setTimeout(() => {
+                    if (!img.complete) {
+                        cleanup();
+                        reject(new Error('Image load timeout'));
+                    }
+                }, 8000);
+                
+                img.src = imageUrl;
+            });
+        } catch (error) {
+            console.error('Error fetching location image:', error);
+            throw error;
+        }
+    }
+    
+    // Function to load image with loading and error states
+    async function loadLocationImage(imageUrl, locationName) {
+        // Show loading state
+        if (imageLoading) imageLoading.classList.remove('hidden');
+        if (locationImageEl) locationImageEl.classList.add('hidden');
+        if (imageError) imageError.classList.add('hidden');
+        
+        // If we have a hardcoded image_url, try it first
+        if (imageUrl && imageUrl.trim() !== '') {
+            try {
+                await new Promise((resolve, reject) => {
+                    const img = new Image();
+                    let timeoutId;
+                    
+                    const cleanup = () => {
+                        if (timeoutId) clearTimeout(timeoutId);
+                    };
+                    
+                    img.onload = () => {
+                        cleanup();
+                        resolve();
+                    };
+                    
+                    img.onerror = () => {
+                        cleanup();
+                        reject(new Error('Hardcoded image failed'));
+                    };
+                    
+                    img.src = imageUrl;
+                    
+                    // Timeout after 5 seconds
+                    timeoutId = setTimeout(() => {
+                        if (!img.complete) {
+                            cleanup();
+                            reject(new Error('Image load timeout'));
+                        }
+                    }, 5000);
+                });
+                
+                // Success - hide loading, show image
+                if (imageLoading) imageLoading.classList.add('hidden');
+                if (locationImageEl) {
+                    locationImageEl.src = imageUrl;
+                    locationImageEl.alt = locationName;
+                    locationImageEl.classList.remove('hidden');
+                }
+                return;
+            } catch (error) {
+                console.warn('Hardcoded image failed, trying API fallback:', error);
+            }
+        }
+        
+        // Fallback to API if hardcoded image fails or doesn't exist
+        try {
+            const apiImageUrl = await getLocationImage(locationName);
+            if (imageLoading) imageLoading.classList.add('hidden');
+            if (locationImageEl) {
+                locationImageEl.src = apiImageUrl;
+                locationImageEl.alt = locationName;
+                locationImageEl.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Failed to load image from API:', error);
+            // Show error state
+            if (imageLoading) imageLoading.classList.add('hidden');
+            if (locationImageEl) locationImageEl.classList.add('hidden');
+            if (imageError) imageError.classList.remove('hidden');
+        }
+    }
+
     // Function to open sidebar with location/park data
-    function openSidebar(data) {
+    async function openSidebar(data) {
         console.log('Opening sidebar for:', data.name);
         if (!locationNameEl || !locationImageEl || !locationCategoryEl || !locationNotesEl || !sidebar) {
             console.error('Sidebar elements not found');
@@ -496,8 +646,10 @@ window.addEventListener('DOMContentLoaded', function() {
         
         // Update sidebar content
         locationNameEl.textContent = data.name;
-        locationImageEl.src = data.image_url;
-        locationImageEl.alt = data.name;
+        
+        // Load image with fallback
+        await loadLocationImage(data.image_url, data.name);
+        
         // Handle both location (has category) and park (doesn't have category) formats
         const category = data.category || 'National Park';
         locationCategoryEl.textContent = category;
