@@ -1,39 +1,1571 @@
 [
   {
+    "id": 1,
+    "name": "Acadia National Park",
+    "lat": 44.35,
+    "lng": -68.21,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "American Samoa National Park",
+    "lat": -14.25,
+    "lng": -170.68,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Arches National Park",
+    "lat": 38.68,
+    "lng": -109.57,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Badlands National Park",
+    "lat": 43.75,
+    "lng": -102.5,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "name": "Big Bend National Park",
+    "lat": 29.25,
+    "lng": -103.25,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "name": "Biscayne National Park",
+    "lat": 25.65,
+    "lng": -80.08,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "name": "Black Canyon of the Gunnison National Park",
+    "lat": 38.57,
+    "lng": -107.72,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "name": "Bryce Canyon National Park",
+    "lat": 37.57,
+    "lng": -112.18,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "name": "Canyonlands National Park",
+    "lat": 38.2,
+    "lng": -109.93,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "name": "Capitol Reef National Park",
+    "lat": 38.2,
+    "lng": -111.17,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "name": "Carlsbad Caverns National Park",
+    "lat": 32.17,
+    "lng": -104.44,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "name": "Channel Islands National Park",
+    "lat": 34.01,
+    "lng": -119.42,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "name": "Congaree National Park",
+    "lat": 33.78,
+    "lng": -80.78,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 14,
+    "name": "Crater Lake National Park",
+    "lat": 42.94,
+    "lng": -122.1,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "name": "Cuyahoga Valley National Park",
+    "lat": 41.24,
+    "lng": -81.55,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "name": "Death Valley National Park",
+    "lat": 36.24,
+    "lng": -116.82,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 17,
+    "name": "Denali National Park and Preserve",
+    "lat": 63.33,
+    "lng": -150.5,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 18,
+    "name": "Dry Tortugas National Park",
+    "lat": 24.63,
+    "lng": -82.87,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 19,
+    "name": "Everglades National Park",
+    "lat": 25.32,
+    "lng": -80.93,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 20,
+    "name": "Gates of the Arctic National Park and Preserve",
+    "lat": 67.78,
+    "lng": -153.3,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 21,
+    "name": "Gateway Arch National Park",
+    "lat": 38.63,
+    "lng": -90.19,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 22,
+    "name": "Glacier Bay National Park and Preserve",
+    "lat": 58.5,
+    "lng": -137,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 23,
+    "name": "Glacier National Park",
+    "lat": 48.8,
+    "lng": -114,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 24,
+    "name": "Grand Canyon National Park",
+    "lat": 36.06,
+    "lng": -112.14,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 25,
+    "name": "Grand Teton National Park",
+    "lat": 43.73,
+    "lng": -110.8,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 26,
+    "name": "Great Basin National Park",
+    "lat": 38.98,
+    "lng": -114.3,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 27,
+    "name": "Great Sand Dunes National Park and Preserve",
+    "lat": 37.73,
+    "lng": -105.51,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 28,
+    "name": "Great Smoky Mountains National Park",
+    "lat": 35.68,
+    "lng": -83.53,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 29,
+    "name": "Guadalupe Mountains National Park",
+    "lat": 31.92,
+    "lng": -104.87,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 30,
+    "name": "Haleakalā National Park",
+    "lat": 20.72,
+    "lng": -156.17,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 31,
+    "name": "Hawaiʻi Volcanoes National Park",
+    "lat": 19.38,
+    "lng": -155.2,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 32,
+    "name": "Hot Springs National Park",
+    "lat": 34.51,
+    "lng": -93.05,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 33,
+    "name": "Indiana Dunes National Park",
+    "lat": 41.65,
+    "lng": -87.07,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 34,
+    "name": "Isle Royale National Park",
+    "lat": 48.1,
+    "lng": -88.55,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 35,
+    "name": "Joshua Tree National Park",
+    "lat": 33.79,
+    "lng": -115.9,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 36,
+    "name": "Katmai National Park and Preserve",
+    "lat": 58.5,
+    "lng": -155,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 37,
+    "name": "Kenai Fjords National Park",
+    "lat": 59.92,
+    "lng": -149.65,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 38,
+    "name": "Kings Canyon National Park",
+    "lat": 36.8,
+    "lng": -118.55,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 39,
+    "name": "Kobuk Valley National Park",
+    "lat": 67.55,
+    "lng": -159.28,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 40,
+    "name": "Lake Clark National Park and Preserve",
+    "lat": 60.97,
+    "lng": -153.42,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 41,
+    "name": "Lassen Volcanic National Park",
+    "lat": 40.49,
+    "lng": -121.51,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 42,
+    "name": "Mammoth Cave National Park",
+    "lat": 37.18,
+    "lng": -86.1,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 43,
+    "name": "Mesa Verde National Park",
+    "lat": 37.23,
+    "lng": -108.46,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 44,
+    "name": "Mount Rainier National Park",
+    "lat": 46.85,
+    "lng": -121.75,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 45,
+    "name": "New River Gorge National Park and Preserve",
+    "lat": 38.07,
+    "lng": -81.08,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 46,
+    "name": "North Cascades National Park",
+    "lat": 48.77,
+    "lng": -121.3,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 47,
+    "name": "Olympic National Park",
+    "lat": 47.97,
+    "lng": -123.5,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 48,
+    "name": "Petrified Forest National Park",
+    "lat": 35.07,
+    "lng": -109.78,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 49,
+    "name": "Pinnacles National Park",
+    "lat": 36.48,
+    "lng": -121.16,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 50,
+    "name": "Redwood National and State Parks",
+    "lat": 41.21,
+    "lng": -124,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 51,
+    "name": "Rocky Mountain National Park",
+    "lat": 40.34,
+    "lng": -105.68,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 52,
+    "name": "Saguaro National Park",
+    "lat": 32.25,
+    "lng": -110.5,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 53,
+    "name": "Sequoia National Park",
+    "lat": 36.43,
+    "lng": -118.68,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 54,
+    "name": "Shenandoah National Park",
+    "lat": 38.53,
+    "lng": -78.35,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 55,
+    "name": "Theodore Roosevelt National Park",
+    "lat": 46.97,
+    "lng": -103.45,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 56,
+    "name": "Virgin Islands National Park",
+    "lat": 18.33,
+    "lng": -64.73,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 57,
+    "name": "Voyageurs National Park",
+    "lat": 48.5,
+    "lng": -92.88,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 58,
+    "name": "White Sands National Park",
+    "lat": 32.78,
+    "lng": -106.17,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 59,
+    "name": "Wind Cave National Park",
+    "lat": 43.57,
+    "lng": -103.48,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 60,
+    "name": "Wrangell-St. Elias National Park and Preserve",
+    "lat": 61,
+    "lng": -142,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 61,
+    "name": "Yellowstone National Park",
+    "lat": 44.43,
+    "lng": -110.59,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 62,
+    "name": "Yosemite National Park",
+    "lat": 37.85,
+    "lng": -119.5,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 63,
+    "name": "Zion National Park",
+    "lat": 37.3,
+    "lng": -113.05,
+    "category": "National Park",
+    "status": "bucket_list",
+    "notes": "",
+    "image_url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 64,
     "name": "Serengeti National Park",
     "lat": -2.3333,
     "lng": 34.8333,
     "category": "National Park",
     "status": "bucket_list",
     "notes": "Dream destination for the Great Migration safari experience.",
-    "image_url": "https://images.unsplash.com/photo-1549317336-206569e8475c"
+    "image_url": "https://images.unsplash.com/photo-1549317336-206569e8475c",
+    "checklist": [
+      {
+        "task": "Explore main visitor center",
+        "completed": false
+      },
+      {
+        "task": "Hike a recommended trail",
+        "completed": false
+      },
+      {
+        "task": "Take scenic photos",
+        "completed": false
+      }
+    ]
   },
   {
+    "id": 65,
     "name": "St. Andrews Links",
     "lat": 56.3373,
-    "lng": -2.8180,
+    "lng": -2.818,
     "category": "Golf",
     "status": "bucket_list",
     "notes": "The Home of Golf. Would love to play the Old Course one day.",
-    "image_url": "https://images.unsplash.com/photo-1535131749006-b7f58c99034b"
+    "image_url": "https://images.unsplash.com/photo-1535131749006-b7f58c99034b",
+    "checklist": []
   },
   {
+    "id": 66,
     "name": "Pebble Beach Golf Links",
     "lat": 36.5681,
     "lng": -121.9497,
     "category": "Golf",
     "status": "visited",
     "notes": "Stunning coastal golf course with breathtaking Pacific Ocean views.",
-    "image_url": "https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa"
+    "image_url": "https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa",
+    "checklist": []
   },
   {
+    "id": 67,
     "name": "Bora Bora Beach",
-    "lat": -16.5000,
-    "lng": -151.7500,
+    "lat": -16.5,
+    "lng": -151.75,
     "category": "Beach",
     "status": "bucket_list",
     "notes": "Paradise destination with crystal-clear turquoise waters and overwater bungalows.",
-    "image_url": "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4"
+    "image_url": "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4",
+    "checklist": []
   }
 ]
-

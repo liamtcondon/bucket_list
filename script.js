@@ -41,6 +41,7 @@ window.addEventListener('DOMContentLoaded', function() {
     const STORAGE_KEY = 'travelTracker_visited';
     const CUSTOM_LOCATIONS_KEY = 'travelTracker_customLocations';
     const MUST_SEES_KEY = 'travelTracker_mustSees';
+    const CHECKLIST_KEY = 'travelTracker_checklists';
     
     // Current item being displayed in sidebar
     let currentItem = null;
@@ -366,6 +367,111 @@ window.addEventListener('DOMContentLoaded', function() {
         };
     }
 
+    // Checklist functionality
+    function getChecklistForLocation(uniqueId, defaultChecklist = []) {
+        try {
+            const allChecklists = JSON.parse(localStorage.getItem(CHECKLIST_KEY) || '{}');
+            // If we have saved checklist, use it; otherwise use default from JSON
+            if (allChecklists[uniqueId]) {
+                return allChecklists[uniqueId];
+            }
+            return defaultChecklist || [];
+        } catch (error) {
+            console.error('Error loading checklist:', error);
+            return defaultChecklist || [];
+        }
+    }
+    
+    function saveChecklistForLocation(uniqueId, checklist) {
+        try {
+            const allChecklists = JSON.parse(localStorage.getItem(CHECKLIST_KEY) || '{}');
+            allChecklists[uniqueId] = checklist;
+            localStorage.setItem(CHECKLIST_KEY, JSON.stringify(allChecklists));
+        } catch (error) {
+            console.error('Error saving checklist:', error);
+        }
+    }
+    
+    function loadChecklist(uniqueId, defaultChecklist = []) {
+        const checklistContainer = document.getElementById('checklistContainer');
+        if (!checklistContainer) return;
+        
+        const checklist = getChecklistForLocation(uniqueId, defaultChecklist);
+        checklistContainer.innerHTML = '';
+        
+        if (checklist.length === 0) {
+            checklistContainer.innerHTML = '<p class="text-sm text-gray-500 italic">No checklist items</p>';
+            return;
+        }
+        
+        checklist.forEach((item, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'flex items-center gap-2 p-2 bg-gray-50 rounded-lg';
+            itemDiv.innerHTML = `
+                <input type="checkbox" ${item.completed ? 'checked' : ''} 
+                       class="checklist-checkbox w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                       data-index="${index}">
+                <span class="flex-1 text-sm ${item.completed ? 'line-through text-gray-500' : 'text-gray-700'}">${item.task}</span>
+            `;
+            
+            // Checkbox handler
+            const checkbox = itemDiv.querySelector('.checklist-checkbox');
+            checkbox.addEventListener('change', (e) => {
+                const idx = parseInt(e.target.dataset.index);
+                const updatedChecklist = getChecklistForLocation(uniqueId, defaultChecklist);
+                updatedChecklist[idx].completed = e.target.checked;
+                saveChecklistForLocation(uniqueId, updatedChecklist);
+                
+                // Check if all tasks are complete
+                const allComplete = updatedChecklist.every(task => task.completed);
+                
+                if (allComplete && updatedChecklist.length > 0) {
+                    // Update status to visited
+                    const uniqueIdForStatus = generateUniqueId(currentItem);
+                    setVisitedStatus(uniqueIdForStatus, true);
+                    
+                    // Update the location's status in localStorage if it's a custom location
+                    if (isCustomLocation(currentItem)) {
+                        try {
+                            const customLocations = JSON.parse(localStorage.getItem(CUSTOM_LOCATIONS_KEY) || '[]');
+                            const locationIndex = customLocations.findIndex(loc => generateUniqueId(loc) === uniqueIdForStatus);
+                            if (locationIndex !== -1) {
+                                customLocations[locationIndex].status = 'visited';
+                                localStorage.setItem(CUSTOM_LOCATIONS_KEY, JSON.stringify(customLocations));
+                                // Update the data object
+                                currentItem.status = 'visited';
+                                if (currentMarkerData) {
+                                    currentMarkerData.data.status = 'visited';
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error updating location status:', error);
+                        }
+                    }
+                    
+                    // Update marker appearance
+                    if (currentMarkerData) {
+                        currentMarkerData.isVisited = true;
+                        updateMarkerAppearance(currentMarkerData, true);
+                    }
+                    
+                    // Update visited checkbox
+                    if (visitedCheckbox) {
+                        visitedCheckbox.checked = true;
+                    }
+                    
+                    // Update progress bars
+                    updateProgressBars();
+                }
+                
+                // Reload to update styling
+                loadChecklist(uniqueId, defaultChecklist);
+            });
+            
+            checklistContainer.appendChild(itemDiv);
+        });
+    }
+
     // Function to open sidebar with location/park data
     function openSidebar(data) {
         console.log('Opening sidebar for:', data.name);
@@ -427,6 +533,10 @@ window.addEventListener('DOMContentLoaded', function() {
         if (deleteBtn) {
             deleteBtn.style.display = isCustom ? 'block' : 'none';
         }
+        
+        // Load checklist for this location
+        const defaultChecklist = data.checklist || [];
+        loadChecklist(uniqueId, defaultChecklist);
         
         // Load must-sees for this location
         loadMustSees(uniqueId);
