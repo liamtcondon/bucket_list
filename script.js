@@ -7,6 +7,40 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19
 }).addTo(map);
 
+// Sidebar elements
+const sidebar = document.getElementById('sidebar');
+const closeSidebarBtn = document.getElementById('closeSidebar');
+const locationNameEl = document.getElementById('locationName');
+const locationImageEl = document.getElementById('locationImage');
+const locationCategoryEl = document.getElementById('locationCategory');
+const locationNotesEl = document.getElementById('locationNotes');
+
+// Function to open sidebar with location data
+function openSidebar(location) {
+    locationNameEl.textContent = location.name;
+    locationImageEl.src = location.image_url;
+    locationImageEl.alt = location.name;
+    locationCategoryEl.textContent = location.category;
+    locationNotesEl.textContent = location.notes || 'No notes available.';
+    
+    sidebar.classList.add('open');
+}
+
+// Function to close sidebar
+function closeSidebar() {
+    sidebar.classList.remove('open');
+}
+
+// Close sidebar when close button is clicked
+closeSidebarBtn.addEventListener('click', closeSidebar);
+
+// Close sidebar when clicking outside (on the map)
+map.on('click', function() {
+    if (sidebar.classList.contains('open')) {
+        closeSidebar();
+    }
+});
+
 // Load locations and add markers
 fetch('locations.json')
     .then(response => response.json())
@@ -28,20 +62,14 @@ fetch('locations.json')
                 iconAnchor: [10, 10]
             });
 
-            // Create popup content
-            const popupContent = `
-                <div style="min-width: 200px;">
-                    <h3 style="margin: 0 0 8px 0; font-weight: bold;">${location.name}</h3>
-                    <p style="margin: 4px 0; color: #666;"><strong>Category:</strong> ${location.category}</p>
-                    <p style="margin: 4px 0; color: #666;"><strong>Status:</strong> ${location.status === 'visited' ? '✅ Visited' : '📋 Bucket List'}</p>
-                    ${location.notes ? `<p style="margin: 8px 0 0 0; font-style: italic;">${location.notes}</p>` : ''}
-                </div>
-            `;
-
             // Add marker to map
             const marker = L.marker([location.lat, location.lng], { icon: icon })
-                .addTo(map)
-                .bindPopup(popupContent);
+                .addTo(map);
+            
+            // Add click handler to open sidebar
+            marker.on('click', function() {
+                openSidebar(location);
+            });
         });
 
         // Fit map to show all markers
