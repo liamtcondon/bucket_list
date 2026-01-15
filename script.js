@@ -34,11 +34,14 @@ window.addEventListener('DOMContentLoaded', function() {
     const visitedCheckbox = document.getElementById('visitedCheckbox');
     
     // Progress bar elements
-    const worldProgressBar = document.getElementById('worldProgressBar');
-    const worldProgressPercent = document.getElementById('worldProgressPercent');
+    const bucketListProgressBar = document.getElementById('bucketListProgressBar');
+    const bucketListProgressPercent = document.getElementById('bucketListProgressPercent');
     const categoryProgressBar = document.getElementById('categoryProgressBar');
     const categoryProgressPercent = document.getElementById('categoryProgressPercent');
     const categoryProgressLabel = document.getElementById('categoryProgressLabel');
+    
+    // Track currently selected category
+    let selectedCategory = null;
     
     // Local storage keys
     const STORAGE_KEY = 'travelTracker_visited';
@@ -1043,42 +1046,28 @@ window.addEventListener('DOMContentLoaded', function() {
     function updateProgressBars() {
         if (!allMarkers.length) return;
         
-        // Calculate world progress
+        // Calculate Bucket List progress (all locations across all categories)
         const visitedCount = allMarkers.filter(m => m.isVisited).length;
-        const worldProgress = (visitedCount / allMarkers.length) * 100;
+        const bucketListProgress = (visitedCount / allMarkers.length) * 100;
         
-        if (worldProgressBar && worldProgressPercent) {
-            worldProgressBar.style.width = worldProgress + '%';
-            worldProgressPercent.textContent = Math.round(worldProgress) + '%';
+        if (bucketListProgressBar && bucketListProgressPercent) {
+            bucketListProgressBar.style.width = bucketListProgress + '%';
+            bucketListProgressPercent.textContent = Math.round(bucketListProgress) + '%';
         }
         
-        // Calculate category progress based on current filter or selected category
+        // Calculate category progress for currently selected category
         let categoryProgress = 0;
-        let categoryLabel = 'All Categories';
+        let categoryLabel = 'Select a category';
         
-        if (currentFilter === 'visited' || currentFilter === 'bucket') {
-            // Show progress for current filter
-            const filteredMarkers = allMarkers.filter(m => {
-                if (currentFilter === 'visited') return m.isVisited;
-                return !m.isVisited;
-            });
-            const filteredVisited = filteredMarkers.filter(m => m.isVisited).length;
-            categoryProgress = filteredMarkers.length > 0 ? (filteredVisited / filteredMarkers.length) * 100 : 0;
-            categoryLabel = currentFilter === 'visited' ? 'Visited Filter' : 'Bucket List Filter';
-        } else if (currentItem) {
-            // Show progress for currently selected category
-            const selectedCategory = currentItem.category || 'National Park';
+        if (selectedCategory) {
+            // Show progress for the selected category
             const categoryMarkers = allMarkers.filter(m => {
                 const cat = m.data.category || 'National Park';
                 return cat === selectedCategory;
             });
             const categoryVisitedCount = categoryMarkers.filter(m => m.isVisited).length;
             categoryProgress = categoryMarkers.length > 0 ? (categoryVisitedCount / categoryMarkers.length) * 100 : 0;
-            categoryLabel = selectedCategory + ' Visited';
-        } else {
-            // Default: show overall progress
-            categoryProgress = worldProgress;
-            categoryLabel = 'All Categories';
+            categoryLabel = selectedCategory;
         }
         
         if (categoryProgressBar && categoryProgressPercent && categoryProgressLabel) {
@@ -1086,6 +1075,12 @@ window.addEventListener('DOMContentLoaded', function() {
             categoryProgressPercent.textContent = Math.round(categoryProgress) + '%';
             categoryProgressLabel.textContent = categoryLabel;
         }
+    }
+    
+    // Function to set the selected category and update progress bars
+    function setSelectedCategory(categoryName) {
+        selectedCategory = categoryName;
+        updateProgressBars();
     }
 
     // Add event listeners to filter buttons
@@ -1242,6 +1237,8 @@ window.addEventListener('DOMContentLoaded', function() {
                 `;
                 
                 listItem.addEventListener('click', () => {
+                    // Set category as selected when clicking on a location
+                    setSelectedCategory(category);
                     flyToLocation(data);
                 });
                 
@@ -1277,9 +1274,12 @@ window.addEventListener('DOMContentLoaded', function() {
                 if (isOpen) {
                     accordionContent.classList.remove('open');
                     arrow.style.transform = 'rotate(0deg)';
+                    // Don't clear selected category when closing - keep it selected
                 } else {
                     accordionContent.classList.add('open');
                     arrow.style.transform = 'rotate(180deg)';
+                    // Set this category as selected when opening
+                    setSelectedCategory(category);
                 }
             });
             
@@ -1287,8 +1287,9 @@ window.addEventListener('DOMContentLoaded', function() {
             accordionItem.appendChild(accordionContent);
             locationListContainer.appendChild(accordionItem);
             
-            // Auto-expand first category
+            // Auto-expand first category and set it as selected
             if (sortedCategories.indexOf(category) === 0) {
+                setSelectedCategory(category);
                 accordionContent.classList.add('open');
                 accordionHeader.querySelector('.accordion-arrow').style.transform = 'rotate(180deg)';
             }
