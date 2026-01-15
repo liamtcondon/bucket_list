@@ -49,6 +49,92 @@ window.addEventListener('DOMContentLoaded', function() {
     const DELETED_LOCATIONS_KEY = 'travelTracker_deletedLocations'; // Deleted preset location IDs
     const CATEGORIES_KEY = 'travelTracker_categories'; // Category colors and settings
     
+    // Shared Category State Management
+    const CategoryState = {
+        categories: {},
+        listeners: [],
+        
+        // Initialize state from localStorage
+        init() {
+            const stored = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || '{}');
+            this.categories = stored;
+            this.notifyListeners();
+        },
+        
+        // Get category color from state
+        getColor(categoryName) {
+            if (!categoryName) return '#7c3aed';
+            
+            const categoryLower = categoryName.toLowerCase();
+            
+            // Check exact match
+            if (this.categories[categoryName] && this.categories[categoryName].color) {
+                return this.categories[categoryName].color;
+            }
+            
+            // Check case-insensitive match
+            for (const [catName, catData] of Object.entries(this.categories)) {
+                if (catName.toLowerCase() === categoryLower && catData.color) {
+                    return catData.color;
+                }
+            }
+            
+            // Check default colors
+            if (DEFAULT_CATEGORY_COLORS[categoryName]) {
+                return DEFAULT_CATEGORY_COLORS[categoryName];
+            }
+            
+            // Check default colors case-insensitive
+            for (const [catName, color] of Object.entries(DEFAULT_CATEGORY_COLORS)) {
+                if (catName.toLowerCase() === categoryLower) {
+                    return color;
+                }
+            }
+            
+            return '#7c3aed'; // Default purple
+        },
+        
+        // Update category color in state
+        setColor(categoryName, color) {
+            if (!this.categories[categoryName]) {
+                this.categories[categoryName] = {};
+            }
+            this.categories[categoryName].color = color;
+            
+            // Persist to localStorage
+            localStorage.setItem(CATEGORIES_KEY, JSON.stringify(this.categories));
+            
+            // Notify all listeners
+            this.notifyListeners(categoryName, color);
+        },
+        
+        // Get category data
+        getData(categoryName) {
+            return this.categories[categoryName] || { color: this.getColor(categoryName) };
+        },
+        
+        // Subscribe to state changes
+        subscribe(listener) {
+            this.listeners.push(listener);
+            // Return unsubscribe function
+            return () => {
+                const index = this.listeners.indexOf(listener);
+                if (index > -1) {
+                    this.listeners.splice(index, 1);
+                }
+            };
+        },
+        
+        // Notify all listeners of state change
+        notifyListeners(categoryName, color) {
+            this.listeners.forEach(listener => {
+                if (typeof listener === 'function') {
+                    listener(categoryName, color, this.categories);
+                }
+            });
+        }
+    };
+    
     // Current item being displayed in sidebar
     let currentItem = null;
     let currentMarkerData = null;
@@ -94,75 +180,80 @@ window.addEventListener('DOMContentLoaded', function() {
         'Beach': '#2563eb' // Blue
     };
     
-    // Get category color from storage or return default
+    // Get category color from shared state
     function getCategoryColor(category) {
-        if (!category) return '#7c3aed'; // Default purple
-        
-        const categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || '{}');
-        const categoryLower = category.toLowerCase();
-        
-        // Check exact match first
-        if (categories[category]) {
-            return categories[category].color || DEFAULT_CATEGORY_COLORS[category] || '#7c3aed';
-        }
-        
-        // Check case-insensitive match
-        for (const [catName, catData] of Object.entries(categories)) {
-            if (catName.toLowerCase() === categoryLower) {
-                return catData.color || DEFAULT_CATEGORY_COLORS[catName] || '#7c3aed';
-            }
-        }
-        
-        // Check default colors
-        if (DEFAULT_CATEGORY_COLORS[category]) {
-            return DEFAULT_CATEGORY_COLORS[category];
-        }
-        
-        // Check default colors case-insensitive
-        for (const [catName, color] of Object.entries(DEFAULT_CATEGORY_COLORS)) {
-            if (catName.toLowerCase() === categoryLower) {
-                return color;
-            }
-        }
-        
-        return '#7c3aed'; // Default purple
+        return CategoryState.getColor(category);
     }
     
-    // Save category color
+    // Save category color (now uses shared state)
     function saveCategoryColor(categoryName, color) {
-        const categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || '{}');
-        if (!categories[categoryName]) {
-            categories[categoryName] = {};
-        }
-        categories[categoryName].color = color;
-        localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+        CategoryState.setColor(categoryName, color);
     }
     
     // Get category data (includes color)
     function getCategoryData(categoryName) {
-        const categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || '{}');
-        return categories[categoryName] || { color: getCategoryColor(categoryName) };
+        return CategoryState.getData(categoryName);
     }
     
     // Initialize default category colors
     function initializeCategoryColors() {
-        const categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || '{}');
+        const stored = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || '{}');
         let updated = false;
         
         // Set default colors for existing categories if not already set
         for (const [catName, defaultColor] of Object.entries(DEFAULT_CATEGORY_COLORS)) {
-            if (!categories[catName] || !categories[catName].color) {
-                if (!categories[catName]) {
-                    categories[catName] = {};
+            if (!stored[catName] || !stored[catName].color) {
+                if (!stored[catName]) {
+                    stored[catName] = {};
                 }
-                categories[catName].color = defaultColor;
+                stored[catName].color = defaultColor;
                 updated = true;
             }
         }
         
         if (updated) {
-            localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+            localStorage.setItem(CATEGORIES_KEY, JSON.stringify(stored));
         }
+        
+        // Initialize shared state
+        CategoryState.init();
+    }
+    
+    // Function to update all markers for a category when color changes
+    function updateMarkersForCategory(categoryName) {
+        allMarkers.forEach(markerData => {
+            const data = markerData.data;
+            const category = data.category || 'National Park';
+            
+            if (category === categoryName) {
+                // Remove old marker
+                markerClusterGroup.removeLayer(markerData.marker);
+                
+                // Create new marker with updated color
+                const uniqueId = generateUniqueId(data);
+                const locationIsVisited = markerData.isVisited;
+                const locationIcon = createCustomIcon(category, locationIsVisited);
+                const locationMarker = L.marker([data.lat, data.lng], { icon: locationIcon });
+                
+                locationMarker.on('click', function(e) {
+                    e.originalEvent.stopPropagation();
+                    openSidebar(data);
+                });
+                
+                // Update marker data
+                markerData.marker = locationMarker;
+                
+                // Add updated marker back to cluster
+                markerClusterGroup.addLayer(locationMarker);
+            }
+        });
+        
+        // Trigger map resize to ensure markers are properly displayed
+        setTimeout(() => {
+            if (map) {
+                map.invalidateSize();
+            }
+        }, 50);
     }
     
     // Function to create custom icons based on category
@@ -840,6 +931,41 @@ window.addEventListener('DOMContentLoaded', function() {
             sidebar.classList.remove('open');
         }
     }
+    
+    // Function to toggle sidebar collapse
+    function toggleSidebarCollapse() {
+        if (!sidebar) return;
+        
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        const mapElement = document.getElementById('map');
+        
+        if (isCollapsed) {
+            // Expand sidebar
+            sidebar.classList.remove('collapsed');
+            // Map width stays the same (already accounts for left panel)
+            // Sidebar will overlay on top when open
+        } else {
+            // Collapse sidebar
+            sidebar.classList.add('collapsed');
+            // Map width stays the same, sidebar just collapses
+        }
+        
+        // Trigger map resize to update bounds
+        setTimeout(() => {
+            if (map) {
+                map.invalidateSize();
+            }
+        }, 300);
+    }
+    
+    // Initialize sidebar toggle button
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent event bubbling
+            toggleSidebarCollapse();
+        });
+    }
 
     // Close sidebar when close button is clicked
     if (closeSidebarBtn) {
@@ -1022,10 +1148,18 @@ window.addEventListener('DOMContentLoaded', function() {
             accordionItem.className = 'mb-2 border border-gray-200 rounded-lg overflow-hidden';
             
             const accordionHeader = document.createElement('div');
-            accordionHeader.className = 'accordion-header p-3 bg-gray-50 flex justify-between items-center';
+            accordionHeader.className = 'accordion-header p-3 bg-gray-50 flex justify-between items-center relative';
             accordionHeader.innerHTML = `
-                <div class="font-semibold text-gray-800">
+                <div class="font-semibold text-gray-800 flex items-center gap-2">
                     ${category} <span class="text-sm font-normal text-gray-500">(${markers.length})</span>
+                    <button class="category-settings-btn p-1 hover:bg-gray-200 rounded transition-colors" 
+                            data-category="${category}" 
+                            title="Category settings">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </button>
                 </div>
                 <svg class="w-5 h-5 text-gray-500 transition-transform accordion-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -1052,8 +1186,22 @@ window.addEventListener('DOMContentLoaded', function() {
                 accordionContent.appendChild(listItem);
             });
             
-            // Toggle accordion on header click
-            accordionHeader.addEventListener('click', () => {
+            // Add settings button click handler
+            const settingsBtn = accordionHeader.querySelector('.category-settings-btn');
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent accordion toggle
+                    showCategoryColorPicker(category, settingsBtn, accordionHeader);
+                });
+            }
+            
+            // Toggle accordion on header click (but not on settings button)
+            accordionHeader.addEventListener('click', (e) => {
+                // Don't toggle if clicking on settings button
+                if (e.target.closest('.category-settings-btn')) {
+                    return;
+                }
+                
                 const isOpen = accordionContent.classList.contains('open');
                 const arrow = accordionHeader.querySelector('.accordion-arrow');
                 
@@ -1076,6 +1224,96 @@ window.addEventListener('DOMContentLoaded', function() {
                 accordionHeader.querySelector('.accordion-arrow').style.transform = 'rotate(180deg)';
             }
         });
+    }
+    
+    // Function to show category color picker popover
+    function showCategoryColorPicker(categoryName, button, headerElement) {
+        // Remove any existing popovers
+        const existingPopover = document.querySelector('.category-color-popover');
+        if (existingPopover) {
+            existingPopover.remove();
+        }
+        
+        // Get current color for this category
+        const currentColor = getCategoryColor(categoryName);
+        
+        // Color presets
+        const colorPresets = [
+            { name: 'Green', value: '#10b981' },
+            { name: 'Blue', value: '#2563eb' },
+            { name: 'Brown', value: '#92400e' },
+            { name: 'Purple', value: '#7c3aed' },
+            { name: 'Red', value: '#ef4444' },
+            { name: 'Orange', value: '#f59e0b' },
+            { name: 'Pink', value: '#ec4899' },
+            { name: 'Cyan', value: '#06b6d4' },
+            { name: 'Lime', value: '#84cc16' },
+            { name: 'Indigo', value: '#6366f1' },
+            { name: 'Teal', value: '#14b8a6' },
+            { name: 'Amber', value: '#fbbf24' }
+        ];
+        
+        // Create popover
+        const popover = document.createElement('div');
+        popover.className = 'category-color-popover';
+        popover.innerHTML = `
+            <div class="text-sm font-semibold text-gray-700 mb-2">Marker Color</div>
+            <div class="color-preset-grid">
+                ${colorPresets.map(preset => `
+                    <div class="color-preset ${preset.value === currentColor ? 'selected' : ''}" 
+                         style="background-color: ${preset.value}"
+                         data-color="${preset.value}"
+                         title="${preset.name}">
+                    </div>
+                `).join('')}
+            </div>
+            <div class="mt-3 pt-3 border-t border-gray-200">
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Custom Color</label>
+                <input type="color" 
+                       id="categoryCustomColor" 
+                       value="${currentColor}"
+                       class="w-full h-10 border border-gray-300 rounded-lg cursor-pointer">
+            </div>
+        `;
+        
+        // Position popover relative to button
+        headerElement.style.position = 'relative';
+        headerElement.appendChild(popover);
+        
+        // Handle preset color clicks
+        popover.querySelectorAll('.color-preset').forEach(preset => {
+            preset.addEventListener('click', () => {
+                const selectedColor = preset.dataset.color;
+                updateCategoryColor(categoryName, selectedColor);
+                popover.remove();
+            });
+        });
+        
+        // Handle custom color input
+        const customColorInput = popover.querySelector('#categoryCustomColor');
+        customColorInput.addEventListener('change', (e) => {
+            updateCategoryColor(categoryName, e.target.value);
+            popover.remove();
+        });
+        
+        // Close popover when clicking outside
+        setTimeout(() => {
+            document.addEventListener('click', function closePopover(e) {
+                if (!popover.contains(e.target) && !button.contains(e.target)) {
+                    popover.remove();
+                    document.removeEventListener('click', closePopover);
+                }
+            });
+        }, 10);
+    }
+    
+    // Function to update category color (now uses shared state)
+    function updateCategoryColor(categoryName, newColor) {
+        // Update shared state - this will automatically trigger marker updates via subscription
+        CategoryState.setColor(categoryName, newColor);
+        
+        // Update category dropdown colors if needed
+        updateCategoryDropdown();
     }
     
     // Search functionality
@@ -1744,12 +1982,131 @@ window.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Function to search for coordinates using Nominatim API
+    async function searchLocationCoordinates(query) {
+        if (!query || query.trim() === '') {
+            alert('Please enter a location name or address to search.');
+            return;
+        }
+        
+        const searchBtn = document.getElementById('searchLocationBtn');
+        const searchIcon = document.getElementById('searchLocationIcon');
+        const searchText = document.getElementById('searchLocationText');
+        const searchSpinner = document.getElementById('searchLocationSpinner');
+        
+        // Show loading state
+        if (searchBtn) {
+            searchBtn.disabled = true;
+        }
+        if (searchIcon) {
+            searchIcon.classList.add('hidden');
+        }
+        if (searchText) {
+            searchText.textContent = 'Searching...';
+        }
+        if (searchSpinner) {
+            searchSpinner.classList.remove('hidden');
+        }
+        
+        try {
+            // Encode the query
+            const encodedQuery = encodeURIComponent(query.trim());
+            
+            // Fetch coordinates from Nominatim API
+            // Note: Nominatim requires a proper User-Agent header
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodedQuery}&limit=1`,
+                {
+                    headers: {
+                        'User-Agent': 'TravelTracker/1.0 (Personal Project - Location Tracker)' // Required by Nominatim
+                    }
+                }
+            );
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data && data.length > 0) {
+                const result = data[0];
+                const lat = parseFloat(result.lat);
+                const lng = parseFloat(result.lon);
+                
+                // Validate coordinates
+                if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                    // Auto-fill coordinates
+                    const latInput = document.getElementById('newLocationLat');
+                    const lngInput = document.getElementById('newLocationLng');
+                    
+                    if (latInput) {
+                        latInput.value = lat;
+                    }
+                    if (lngInput) {
+                        lngInput.value = lng;
+                    }
+                    
+                    // Show success message
+                    showToast(`Coordinates found: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
+                } else {
+                    throw new Error('Invalid coordinates returned');
+                }
+            } else {
+                alert('No results found. Please try a different search term.');
+            }
+        } catch (error) {
+            console.error('Error searching for coordinates:', error);
+            alert('Error searching for coordinates. Please try again or enter coordinates manually.');
+        } finally {
+            // Hide loading state
+            if (searchBtn) {
+                searchBtn.disabled = false;
+            }
+            if (searchIcon) {
+                searchIcon.classList.remove('hidden');
+            }
+            if (searchText) {
+                searchText.textContent = 'Search';
+            }
+            if (searchSpinner) {
+                searchSpinner.classList.add('hidden');
+            }
+        }
+    }
+    
     // Sync category select and input, handle color picker
     const categorySelect = document.getElementById('newLocationCategorySelect');
     const categoryInput = document.getElementById('newLocationCategory');
     const categoryColorPicker = document.getElementById('categoryColorPicker');
     const categoryColorSelect = document.getElementById('categoryColorSelect');
     const categoryColorInput = document.getElementById('categoryColorInput');
+    
+    // Add search button event listener
+    const searchLocationBtn = document.getElementById('searchLocationBtn');
+    const nameInput = document.getElementById('newLocationName');
+    
+    if (searchLocationBtn) {
+        searchLocationBtn.addEventListener('click', () => {
+            if (nameInput && nameInput.value.trim()) {
+                searchLocationCoordinates(nameInput.value.trim());
+            } else {
+                alert('Please enter a location name or address first.');
+            }
+        });
+    }
+    
+    // Allow Enter key to trigger search in name field
+    if (nameInput) {
+        nameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault(); // Prevent form submission
+                if (nameInput.value.trim() && searchLocationBtn) {
+                    searchLocationBtn.click();
+                }
+            }
+        });
+    }
     
     if (categorySelect && categoryInput) {
         categorySelect.addEventListener('change', (e) => {
@@ -2023,8 +2380,16 @@ window.addEventListener('DOMContentLoaded', function() {
     }
     
     
-    // Initialize category colors (set defaults)
+    // Initialize category colors (set defaults) and shared state
     initializeCategoryColors();
+    
+    // Set up subscription to category state changes for reactive marker updates
+    const categoryStateSubscription = CategoryState.subscribe((categoryName, color, allCategories) => {
+        if (categoryName) {
+            // Update markers for the changed category
+            updateMarkersForCategory(categoryName);
+        }
+    });
     
     // Load parks first, then custom locations
     loadParks();

@@ -23,15 +23,71 @@
             padding: 0;
         }
         #map {
-            width: 100%;
+            width: calc(100% - 320px); /* Account for left panel (320px) */
             height: 100vh;
+            margin-left: 320px; /* Left panel width */
         }
         #sidebar {
             transform: translateX(100%);
-            transition: transform 0.3s ease-in-out;
+            transition: transform 0.3s ease;
         }
         #sidebar.open {
             transform: translateX(0);
+        }
+        #sidebar.collapsed {
+            transform: translateX(calc(100% - 40px)); /* Show 40px for toggle button */
+        }
+        #sidebar.collapsed > .p-6 {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        #sidebarToggle {
+            position: absolute;
+            left: -40px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 60px;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1001;
+            box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s;
+        }
+        #sidebarToggle:hover {
+            background-color: #f3f4f6;
+        }
+        #sidebarToggle svg {
+            transition: transform 0.3s ease;
+        }
+        /* Rotate chevron when collapsed (pointing left to expand) */
+        #sidebar.collapsed #sidebarToggle svg {
+            transform: rotate(180deg);
+        }
+        /* Default chevron points right (to collapse) */
+        #sidebar.open:not(.collapsed) #sidebarToggle svg {
+            transform: rotate(0deg);
+        }
+        /* Hide toggle button when sidebar is fully closed (not open and not collapsed) */
+        #sidebar:not(.open):not(.collapsed) #sidebarToggle {
+            opacity: 0;
+            pointer-events: none;
+        }
+        /* Show toggle button when sidebar is open or collapsed */
+        #sidebar.open #sidebarToggle,
+        #sidebar.collapsed #sidebarToggle {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #map {
+            transition: margin-left 0.3s ease, width 0.3s ease;
         }
         #leftPanel {
             width: 320px;
@@ -55,8 +111,67 @@
             transition: max-height 0.3s ease-out;
         }
         .accordion-content.open {
-            max-height: 1000px;
+            max-height: 400px;
+            overflow-y: auto;
             transition: max-height 0.5s ease-in;
+        }
+        /* Custom scrollbar styling for accordion content */
+        .accordion-content.open::-webkit-scrollbar {
+            width: 6px;
+        }
+        .accordion-content.open::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        .accordion-content.open::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .accordion-content.open::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Firefox scrollbar styling */
+        .accordion-content.open {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f1f1;
+        }
+        /* Category settings popover */
+        .category-color-popover {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            z-index: 2000;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 12px;
+            min-width: 220px;
+        }
+        .category-color-popover.hidden {
+            display: none;
+        }
+        .color-preset-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .color-preset {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .color-preset:hover {
+            transform: scale(1.1);
+            border-color: #9ca3af;
+        }
+        .color-preset.selected {
+            border-color: #3b82f6;
+            border-width: 3px;
         }
     </style>
 </head>
@@ -138,8 +253,22 @@
             <form id="addLocationForm" class="space-y-4">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Name *</label>
-                    <input type="text" id="newLocationName" required autofocus
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <div class="flex gap-2">
+                        <input type="text" id="newLocationName" required autofocus
+                               class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button type="button" id="searchLocationBtn" 
+                                class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors font-semibold text-sm flex items-center gap-2 whitespace-nowrap">
+                            <svg id="searchLocationIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            <span id="searchLocationText">Search</span>
+                            <svg id="searchLocationSpinner" class="hidden w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Enter a location name or address and click Search to auto-fill coordinates</p>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -218,10 +347,16 @@
         <span id="toastMessage">Location added successfully!</span>
     </div>
     
-    <div id="map" style="margin-left: 320px;"></div>
+    <div id="map"></div>
     
     <!-- Sidebar -->
     <div id="sidebar" class="fixed top-0 right-0 w-96 h-full bg-white shadow-2xl z-[1000] overflow-y-auto">
+        <!-- Toggle Button -->
+        <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar">
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+        </button>
         <div class="p-6">
             <!-- Close Button -->
             <button id="closeSidebar" class="mb-4 text-gray-500 hover:text-gray-700 transition-colors">
