@@ -43,6 +43,102 @@ window.addEventListener('DOMContentLoaded', function() {
     // Track currently selected category
     let selectedCategory = null;
     
+    // Track category visibility (which categories are shown on map)
+    const CATEGORY_VISIBILITY_KEY = 'travelTracker_categoryVisibility';
+    let categoryVisibility = {};
+    
+    // Load category visibility from local storage
+    function loadCategoryVisibility() {
+        try {
+            const saved = localStorage.getItem(CATEGORY_VISIBILITY_KEY);
+            if (saved) {
+                categoryVisibility = JSON.parse(saved);
+            } else {
+                // Default: all categories visible
+                categoryVisibility = {};
+            }
+        } catch (e) {
+            console.error('Error loading category visibility:', e);
+            categoryVisibility = {};
+        }
+    }
+    
+    // Save category visibility to local storage
+    function saveCategoryVisibility() {
+        try {
+            localStorage.setItem(CATEGORY_VISIBILITY_KEY, JSON.stringify(categoryVisibility));
+        } catch (e) {
+            console.error('Error saving category visibility:', e);
+        }
+    }
+    
+    // Check if a category is visible (defaults to true if not set)
+    function isCategoryVisible(categoryName) {
+        if (categoryVisibility.hasOwnProperty(categoryName)) {
+            return categoryVisibility[categoryName];
+        }
+        return true; // Default to visible
+    }
+    
+    // Set category visibility
+    function setCategoryVisibility(categoryName, visible) {
+        categoryVisibility[categoryName] = visible;
+        saveCategoryVisibility();
+        updateCategoryVisibilityOnMap(categoryName, visible);
+    }
+    
+    // Update markers and GeoJSON layers visibility on map
+    function updateCategoryVisibilityOnMap(categoryName, visible) {
+        allMarkers.forEach(markerData => {
+            const data = markerData.data;
+            const category = data.category || 'National Park';
+            
+            if (category === categoryName) {
+                if (visible) {
+                    // Show marker
+                    if (!markerClusterGroup.hasLayer(markerData.marker)) {
+                        markerClusterGroup.addLayer(markerData.marker);
+                    }
+                    // Show GeoJSON layer if it exists
+                    if (markerData.geoJsonLayer && !map.hasLayer(markerData.geoJsonLayer)) {
+                        markerData.geoJsonLayer.addTo(map);
+                    }
+                } else {
+                    // Hide marker
+                    if (markerClusterGroup.hasLayer(markerData.marker)) {
+                        markerClusterGroup.removeLayer(markerData.marker);
+                    }
+                    // Hide GeoJSON layer if it exists
+                    if (markerData.geoJsonLayer && map.hasLayer(markerData.geoJsonLayer)) {
+                        map.removeLayer(markerData.geoJsonLayer);
+                    }
+                }
+            }
+        });
+    }
+    
+    // Initialize category visibility for all categories
+    function initializeCategoryVisibility() {
+        const categories = new Set();
+        allMarkers.forEach(markerData => {
+            const category = markerData.data.category || 'National Park';
+            categories.add(category);
+        });
+        
+        categories.forEach(category => {
+            if (!categoryVisibility.hasOwnProperty(category)) {
+                categoryVisibility[category] = true; // Default to visible
+            }
+        });
+        
+        // Apply visibility to all categories
+        categories.forEach(category => {
+            updateCategoryVisibilityOnMap(category, isCategoryVisible(category));
+        });
+        
+        saveCategoryVisibility();
+    }
+    
     // Local storage keys
     const STORAGE_KEY = 'travelTracker_visited';
     const CUSTOM_LOCATIONS_KEY = 'travelTracker_customLocations';
@@ -1179,10 +1275,18 @@ window.addEventListener('DOMContentLoaded', function() {
             const accordionItem = document.createElement('div');
             accordionItem.className = 'mb-2 border border-gray-200 rounded-lg overflow-hidden';
             
+            // Check if category is visible
+            const categoryIsVisible = isCategoryVisible(category);
+            
             const accordionHeader = document.createElement('div');
             accordionHeader.className = 'accordion-header p-3 bg-gray-50 flex justify-between items-center relative';
             accordionHeader.innerHTML = `
                 <div class="font-semibold text-gray-800 flex items-center gap-2">
+                    <input type="checkbox" 
+                           class="category-visibility-checkbox w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer" 
+                           data-category="${category}"
+                           ${categoryIsVisible ? 'checked' : ''}
+                           title="Toggle ${category} markers on map">
                     ${category} <span class="text-sm font-normal text-gray-500">(${markers.length})</span>
                     <button class="category-settings-btn p-1 hover:bg-gray-200 rounded transition-colors" 
                             data-category="${category}" 
@@ -1244,6 +1348,21 @@ window.addEventListener('DOMContentLoaded', function() {
                 
                 accordionContent.appendChild(listItem);
             });
+            
+            // Add visibility checkbox handler
+            const visibilityCheckbox = accordionHeader.querySelector('.category-visibility-checkbox');
+            if (visibilityCheckbox) {
+                visibilityCheckbox.addEventListener('change', (e) => {
+                    e.stopPropagation(); // Prevent accordion toggle
+                    const isVisible = e.target.checked;
+                    setCategoryVisibility(category, isVisible);
+                });
+                
+                // Prevent accordion toggle when clicking checkbox
+                visibilityCheckbox.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+            }
             
             // Add settings button click handler
             const settingsBtn = accordionHeader.querySelector('.category-settings-btn');
@@ -1921,6 +2040,10 @@ window.addEventListener('DOMContentLoaded', function() {
                 populateLocationList();
                 updateProgressBars();
                 updateCategoryDropdown();
+                
+                // Initialize category visibility after all countries are loaded
+                loadCategoryVisibility();
+                initializeCategoryVisibility();
                 
                 console.log(`Loaded ${countries.length} countries`);
             })
@@ -2820,6 +2943,10 @@ window.addEventListener('DOMContentLoaded', function() {
     
     // Load countries after custom locations
     setTimeout(() => {
-        loadCountries();
+        loadCountries().then(() => {
+            // Initialize category visibility after all locations are loaded
+            loadCategoryVisibility();
+            initializeCategoryVisibility();
+        });
     }, 200);
 });
