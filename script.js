@@ -394,6 +394,8 @@ window.addEventListener('DOMContentLoaded', function() {
     
     // Function to update marker appearance
     function updateMarkerAppearance(markerData, isVisited) {
+        // Update country boundary styling if it's a country
+        updateCountryStyle(markerData);
         const marker = markerData.marker;
         const data = markerData.data;
         
@@ -1114,6 +1116,10 @@ window.addEventListener('DOMContentLoaded', function() {
         const locationListContainer = document.getElementById('locationListContainer');
         if (!locationListContainer) return;
         
+        // Get country-specific search term
+        const countrySearchInput = document.getElementById('countrySearchInput');
+        const countrySearchTerm = countrySearchInput ? countrySearchInput.value.trim() : '';
+        
         // Clear existing list
         locationListContainer.innerHTML = '';
         
@@ -1123,8 +1129,15 @@ window.addEventListener('DOMContentLoaded', function() {
             const data = markerData.data;
             const category = data.category || 'National Park';
             
-            // Filter by search term
+            // Filter by general search term
             if (searchTerm && !data.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+                return;
+            }
+            
+            // Filter countries by country-specific search term
+            const isCountry = category.toLowerCase().includes('countries to visit') || 
+                             category.toLowerCase().includes('country');
+            if (isCountry && countrySearchTerm && !data.name.toLowerCase().includes(countrySearchTerm.toLowerCase())) {
                 return;
             }
             
@@ -1142,6 +1155,30 @@ window.addEventListener('DOMContentLoaded', function() {
             const markers = groupedByCategory[category].sort((a, b) => {
                 return a.data.name.localeCompare(b.data.name);
             });
+            
+            // Check if this is the Countries to Visit category
+            const isCountriesCategory = category.toLowerCase().includes('countries to visit') || 
+                                       category.toLowerCase().includes('country');
+            
+            // Calculate progress for Countries to Visit category
+            let progressHTML = '';
+            if (isCountriesCategory) {
+                const totalCountries = markers.length;
+                const visitedCountries = markers.filter(m => m.isVisited).length;
+                const progressPercent = totalCountries > 0 ? Math.round((visitedCountries / totalCountries) * 100) : 0;
+                
+                progressHTML = `
+                    <div class="mb-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-semibold text-purple-800">${visitedCountries} / ${totalCountries} countries visited</span>
+                            <span class="text-sm font-semibold text-purple-800">${progressPercent}%</span>
+                        </div>
+                        <div class="w-full bg-purple-200 rounded-full h-2.5">
+                            <div class="bg-purple-600 h-2.5 rounded-full transition-all duration-300" style="width: ${progressPercent}%"></div>
+                        </div>
+                    </div>
+                `;
+            }
             
             // Create accordion item
             const accordionItem = document.createElement('div');
@@ -1169,14 +1206,39 @@ window.addEventListener('DOMContentLoaded', function() {
             const accordionContent = document.createElement('div');
             accordionContent.className = 'accordion-content';
             
+            // Add progress bar for Countries to Visit category
+            if (progressHTML) {
+                const progressContainer = document.createElement('div');
+                progressContainer.innerHTML = progressHTML;
+                accordionContent.appendChild(progressContainer);
+            }
+            
             // Create location items within accordion
             markers.forEach(markerData => {
                 const data = markerData.data;
                 const listItem = document.createElement('div');
                 listItem.className = 'p-3 border-t border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors';
+                
+                // Add flag icon for countries (circular flag icon)
+                const flagIcon = isCountriesCategory ? `
+                    <div class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-red-400 via-white to-blue-400 mr-2 flex-shrink-0 border border-gray-300 shadow-sm" title="Country">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="2" y="3" width="12" height="8" fill="#DC2626" rx="1"/>
+                            <rect x="2" y="7" width="12" height="4" fill="#FFFFFF"/>
+                            <rect x="2" y="9" width="12" height="2" fill="#2563EB"/>
+                            <line x1="2" y1="3" x2="2" y2="19" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                ` : '';
+                
                 listItem.innerHTML = `
-                    <div class="font-semibold text-gray-800">${data.name}</div>
-                    ${data.notes ? `<div class="text-xs text-gray-500 mt-1 line-clamp-1">${data.notes}</div>` : ''}
+                    <div class="flex items-center">
+                        ${flagIcon}
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-800">${data.name}</div>
+                            ${data.notes ? `<div class="text-xs text-gray-500 mt-1 line-clamp-1">${data.notes}</div>` : ''}
+                        </div>
+                    </div>
                 `;
                 
                 listItem.addEventListener('click', () => {
@@ -1384,6 +1446,16 @@ window.addEventListener('DOMContentLoaded', function() {
             const searchTerm = e.target.value.trim();
             populateLocationList(searchTerm);
         });
+        
+        // Country-specific search input
+        const countrySearchInput = document.getElementById('countrySearchInput');
+        if (countrySearchInput) {
+            countrySearchInput.addEventListener('input', (e) => {
+                // Re-populate list with current general search term and new country search term
+                const generalSearchTerm = searchInput.value.trim();
+                populateLocationList(generalSearchTerm);
+            });
+        }
     }
 
     // Load locations and add markers
@@ -1569,6 +1641,291 @@ window.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error loading custom locations:', error);
         }
+    }
+    
+    // Function to style countries based on category and visited state
+    function styleCountry(country, isVisited) {
+        const category = country.category || '';
+        const isCountriesToVisit = category.toLowerCase().includes('countries to visit');
+        
+        if (isCountriesToVisit) {
+            // Countries to Visit category - use soft purple/gold color
+            if (isVisited) {
+                // Visited: brighter, more intense highlight
+                return {
+                    color: '#8b5cf6', // Soft purple border
+                    weight: 2, // Border thickness
+                    fillColor: '#a78bfa', // Lighter purple fill
+                    fillOpacity: 0.6, // More intense when visited
+                    opacity: 0.8
+                };
+            } else {
+                // Not visited: softer highlight
+                return {
+                    color: '#a78bfa', // Soft purple border
+                    weight: 2, // Border thickness
+                    fillColor: '#c4b5fd', // Very light purple fill
+                    fillOpacity: 0.4, // As specified
+                    opacity: 0.7
+                };
+            }
+        } else {
+            // Other categories - default styling
+            if (isVisited) {
+                return {
+                    color: '#10b981', // Green border
+                    weight: 1,
+                    fillColor: '#10b981',
+                    fillOpacity: 0.3,
+                    opacity: 0.6
+                };
+            } else {
+                return {
+                    color: '#666',
+                    weight: 1,
+                    fillColor: '#f3f4f6',
+                    fillOpacity: 0.1,
+                    opacity: 0.6
+                };
+            }
+        }
+    }
+    
+    // Function to update country styling when visited state changes
+    function updateCountryStyle(markerData) {
+        if (markerData.geoJsonLayer && markerData.data.geometry) {
+            const newStyle = styleCountry(markerData.data, markerData.isVisited);
+            markerData.geoJsonLayer.setStyle(newStyle);
+        }
+    }
+    
+    // Function to calculate country centroid from GeoJSON geometry using turf.js
+    function calculateCountryCentroid(geometry) {
+        if (!geometry) {
+            return null;
+        }
+        
+        try {
+            // Use turf.js to calculate the centroid (geographic center)
+            // This is more accurate than simple averaging
+            if (typeof turf !== 'undefined' && turf.centroid) {
+                const geoJsonFeature = {
+                    type: 'Feature',
+                    geometry: geometry
+                };
+                const centroid = turf.centroid(geoJsonFeature);
+                return {
+                    lat: centroid.geometry.coordinates[1],
+                    lng: centroid.geometry.coordinates[0]
+                };
+            } else {
+                // Fallback: simple average if turf.js is not available
+                let allLats = [];
+                let allLngs = [];
+                
+                const extractCoords = (coords) => {
+                    if (Array.isArray(coords[0]) && Array.isArray(coords[0][0])) {
+                        coords.forEach(ring => {
+                            if (Array.isArray(ring[0]) && typeof ring[0][0] === 'number') {
+                                ring.forEach(coord => {
+                                    if (Array.isArray(coord) && coord.length >= 2) {
+                                        allLngs.push(coord[0]);
+                                        allLats.push(coord[1]);
+                                    }
+                                });
+                            } else {
+                                extractCoords(ring);
+                            }
+                        });
+                    } else if (Array.isArray(coords[0]) && typeof coords[0][0] === 'number') {
+                        coords.forEach(coord => {
+                            if (Array.isArray(coord) && coord.length >= 2) {
+                                allLngs.push(coord[0]);
+                                allLats.push(coord[1]);
+                            }
+                        });
+                    }
+                };
+                
+                if (geometry.type === 'Polygon') {
+                    extractCoords(geometry.coordinates);
+                } else if (geometry.type === 'MultiPolygon') {
+                    geometry.coordinates.forEach(polygon => {
+                        extractCoords(polygon);
+                    });
+                }
+                
+                if (allLats.length === 0 || allLngs.length === 0) {
+                    return null;
+                }
+                
+                const lat = allLats.reduce((a, b) => a + b, 0) / allLats.length;
+                const lng = allLngs.reduce((a, b) => a + b, 0) / allLngs.length;
+                
+                return { lat, lng };
+            }
+        } catch (error) {
+            console.error('Error calculating centroid:', error);
+            return null;
+        }
+    }
+    
+    // Function to highlight a country name in the sidebar location list
+    function highlightCountryInSidebar(countryName) {
+        // Find the location list item for this country
+        const locationListContainer = document.getElementById('locationListContainer');
+        if (!locationListContainer) return;
+        
+        // Remove any existing highlights
+        const existingHighlights = locationListContainer.querySelectorAll('.country-highlighted');
+        existingHighlights.forEach(el => {
+            el.classList.remove('country-highlighted');
+            el.style.backgroundColor = '';
+        });
+        
+        // Find and highlight the country
+        const listItems = locationListContainer.querySelectorAll('.p-3');
+        listItems.forEach(item => {
+            const nameElement = item.querySelector('.font-semibold');
+            if (nameElement && nameElement.textContent.trim() === countryName) {
+                item.classList.add('country-highlighted');
+                item.style.backgroundColor = '#fef3c7'; // Light yellow highlight
+                item.style.transition = 'background-color 0.3s ease';
+                
+                // Scroll into view if needed
+                item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Remove highlight after 3 seconds
+                setTimeout(() => {
+                    item.classList.remove('country-highlighted');
+                    item.style.backgroundColor = '';
+                }, 3000);
+            }
+        });
+    }
+    
+    // Load countries from globalCountries.json
+    function loadCountries() {
+        fetch('globalCountries.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to load countries');
+                }
+                return response.json();
+            })
+            .then(countries => {
+                countries.forEach(country => {
+                    const uniqueId = generateUniqueId(country);
+                    
+                    // Get visited status from localStorage or use default
+                    const locationIsVisited = getVisitedStatus(uniqueId, country.visited || country.status === 'visited');
+                    
+                    // Calculate accurate centroid using turf.js if geometry is available
+                    let countryLat = country.lat;
+                    let countryLng = country.lng;
+                    
+                    if (country.geometry) {
+                        const centroid = calculateCountryCentroid(country.geometry);
+                        if (centroid) {
+                            countryLat = centroid.lat;
+                            countryLng = centroid.lng;
+                            // Update country data with accurate centroid
+                            country.lat = countryLat;
+                            country.lng = countryLng;
+                        }
+                    }
+                    
+                    // Create icon for country
+                    const countryIcon = createCustomIcon(country.category, locationIsVisited);
+                    
+                    // Create marker at country centroid
+                    const countryMarker = L.marker([countryLat, countryLng], { icon: countryIcon });
+                    
+                    countryMarker.on('click', function(e) {
+                        e.originalEvent.stopPropagation();
+                        // Open sidebar and highlight the country
+                        openSidebar(country);
+                        // Highlight country in sidebar list
+                        highlightCountryInSidebar(country.name);
+                    });
+                    
+                    // Add country boundary as GeoJSON layer with category-based styling
+                    let geoJsonLayer = null;
+                    if (country.geometry) {
+                        // Get styling based on category and visited state
+                        const countryStyle = styleCountry(country, locationIsVisited);
+                        
+                        geoJsonLayer = L.geoJSON(country.geometry, {
+                            style: countryStyle,
+                            interactive: true
+                        });
+                        
+                        // Make boundary clickable - toggle visited state on click
+                        geoJsonLayer.on('click', function(e) {
+                            e.originalEvent.stopPropagation();
+                            
+                            // Toggle visited state
+                            const uniqueId = generateUniqueId(country);
+                            const currentVisited = getVisitedStatus(uniqueId, false);
+                            const newVisited = !currentVisited;
+                            
+                            // Update visited status in localStorage
+                            const visitedData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+                            visitedData[uniqueId] = newVisited;
+                            localStorage.setItem(STORAGE_KEY, JSON.stringify(visitedData));
+                            
+                            // Update marker data
+                            const markerData = allMarkers.find(m => m.uniqueId === uniqueId);
+                            if (markerData) {
+                                markerData.isVisited = newVisited;
+                                
+                                // Update marker icon
+                                const newIcon = createCustomIcon(country.category, newVisited);
+                                markerData.marker.setIcon(newIcon);
+                                
+                                // Update country boundary styling
+                                updateCountryStyle(markerData);
+                                
+                                // Update progress bars
+                                updateProgressBars();
+                                
+                                // Update location list if sidebar is open
+                                if (currentItem && generateUniqueId(currentItem) === uniqueId) {
+                                    visitedCheckbox.checked = newVisited;
+                                }
+                            }
+                            
+                            // Open sidebar to show updated state
+                            openSidebar(country);
+                        });
+                        
+                        // Add to map - visible by default for Countries to Visit
+                        geoJsonLayer.addTo(map);
+                    }
+                    
+                    // Store marker data
+                    allMarkers.push({
+                        marker: countryMarker,
+                        isVisited: locationIsVisited,
+                        data: country,
+                        uniqueId: uniqueId,
+                        geoJsonLayer: geoJsonLayer // Store boundary layer
+                    });
+                    
+                    // Add marker to cluster group
+                    markerClusterGroup.addLayer(countryMarker);
+                });
+                
+                // Update UI
+                populateLocationList();
+                updateProgressBars();
+                updateCategoryDropdown();
+                
+                console.log(`Loaded ${countries.length} countries`);
+            })
+            .catch(error => {
+                console.error('Error loading countries:', error);
+            });
     }
     
     // Save custom location to localStorage
@@ -2452,11 +2809,16 @@ window.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Load parks first, then custom locations
+    // Load parks first, then custom locations, then countries
     loadParks();
     
     // Load custom locations after a short delay to ensure parks are loaded
     setTimeout(() => {
         loadCustomLocations();
     }, 100);
+    
+    // Load countries after custom locations
+    setTimeout(() => {
+        loadCountries();
+    }, 200);
 });
