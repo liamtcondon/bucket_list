@@ -1190,8 +1190,15 @@ window.addEventListener('DOMContentLoaded', function() {
             const settingsBtn = accordionHeader.querySelector('.category-settings-btn');
             if (settingsBtn) {
                 settingsBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
                     e.stopPropagation(); // Prevent accordion toggle
+                    console.log('Settings button clicked for category:', category);
                     showCategoryColorPicker(category, settingsBtn, accordionHeader);
+                });
+                
+                // Also prevent event bubbling on the button itself
+                settingsBtn.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
                 });
             }
             
@@ -1228,6 +1235,8 @@ window.addEventListener('DOMContentLoaded', function() {
     
     // Function to show category color picker popover
     function showCategoryColorPicker(categoryName, button, headerElement) {
+        console.log('showCategoryColorPicker called for:', categoryName, button, headerElement);
+        
         // Remove any existing popovers
         const existingPopover = document.querySelector('.category-color-popover');
         if (existingPopover) {
@@ -1236,6 +1245,7 @@ window.addEventListener('DOMContentLoaded', function() {
         
         // Get current color for this category
         const currentColor = getCategoryColor(categoryName);
+        console.log('Current color for', categoryName, ':', currentColor);
         
         // Color presets
         const colorPresets = [
@@ -1256,6 +1266,7 @@ window.addEventListener('DOMContentLoaded', function() {
         // Create popover
         const popover = document.createElement('div');
         popover.className = 'category-color-popover';
+        popover.setAttribute('data-category', categoryName); // For debugging
         popover.innerHTML = `
             <div class="text-sm font-semibold text-gray-700 mb-2">Marker Color</div>
             <div class="color-preset-grid">
@@ -1276,9 +1287,59 @@ window.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        // Position popover relative to button
-        headerElement.style.position = 'relative';
-        headerElement.appendChild(popover);
+        // Position popover relative to button using fixed positioning
+        if (!button || !headerElement) {
+            console.error('Button or headerElement is missing');
+            return;
+        }
+        
+        const buttonRect = button.getBoundingClientRect();
+        console.log('Button position:', buttonRect);
+        
+        // Calculate position - place it below the button, centered on button
+        // Use getBoundingClientRect which gives viewport-relative coordinates (perfect for fixed positioning)
+        const popoverTop = buttonRect.bottom + 8;
+        let popoverLeft = buttonRect.left - 80; // Shift left to center on button (popover is ~220px wide)
+        
+        // Ensure popover doesn't go off left edge
+        if (popoverLeft < 10) {
+            popoverLeft = 10;
+        }
+        
+        // Set explicit positioning styles (fixed positioning uses viewport coordinates)
+        popover.style.position = 'fixed';
+        popover.style.top = `${popoverTop}px`;
+        popover.style.left = `${popoverLeft}px`;
+        popover.style.zIndex = '3000';
+        popover.style.display = 'block';
+        popover.style.visibility = 'visible';
+        popover.style.opacity = '1';
+        
+        // Append to body to avoid overflow issues
+        document.body.appendChild(popover);
+        console.log('Popover added to body. Position:', { top: popoverTop, left: popoverLeft, buttonRect });
+        
+        // Adjust position if popover would go off screen
+        setTimeout(() => {
+            const popoverRect = popover.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            // Adjust horizontal position if needed
+            if (popoverRect.right > viewportWidth) {
+                popover.style.left = `${viewportWidth - popoverRect.width - 10}px`;
+            }
+            if (popoverRect.left < 0) {
+                popover.style.left = '10px';
+            }
+            
+            // Adjust vertical position if needed
+            if (popoverRect.bottom > viewportHeight) {
+                popover.style.top = `${buttonRect.top - popoverRect.height - 4}px`;
+            }
+            
+            console.log('Popover final position:', popover.getBoundingClientRect());
+        }, 0);
         
         // Handle preset color clicks
         popover.querySelectorAll('.color-preset').forEach(preset => {
